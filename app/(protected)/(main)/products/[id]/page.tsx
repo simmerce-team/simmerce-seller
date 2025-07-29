@@ -21,6 +21,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { use } from "react";
 import { toast } from "sonner";
 
 type Product = {
@@ -51,9 +52,12 @@ type Product = {
   conversionRate: number;
 };
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+type Params = Promise<{ slug: string }>;
+
+export default function ProductDetailPage({ params }: { params: Params }) {
   const router = useRouter();
-  const productId = params.id;
+  const paramsData = use(params)
+  const productId = paramsData.slug;
 
   // Mock product data - replace with API call
   const product: Product = {
