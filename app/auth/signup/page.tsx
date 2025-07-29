@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -81,12 +82,12 @@ export default function SignUpPage() {
       // Redirect to verification/setup page
       router.push('/auth/verify-email');
       
-      toast('Account created successfully!',{
+      toast('Account created successfully!', {
         description: 'Please verify your email to continue.',
       });
     } catch (error) {
       console.error('Signup error:', error);
-      toast('Signup failed',{
+      toast('Signup failed', {
         description: error instanceof Error ? error.message : 'An error occurred. Please try again.',
       });
     } finally {
@@ -96,276 +97,283 @@ export default function SignUpPage() {
 
   const renderStepOne = () => (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Create your account</h2>
-      <p className="text-sm text-slate-500 mb-6">
-        Enter your email and create a password to get started
-      </p>
-      
-      <div className="space-y-4">
-        <div className="grid gap-2">
-          <Label htmlFor="email">Business Email</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="name@yourbusiness.com"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            minLength={8}
-          />
-          <p className="text-xs text-slate-500">
-            Must be at least 8 characters
-          </p>
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="confirmPassword">Confirm Password</Label>
-          <Input
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            placeholder="••••••••"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">Business Email</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="name@yourbusiness.com"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          placeholder="••••••••"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          minLength={8}
+        />
+        <p className="text-xs text-muted-foreground">
+          Must be at least 8 characters
+        </p>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <Input
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          placeholder="••••••••"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          required
+        />
       </div>
     </div>
   );
 
   const renderStepTwo = () => (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Business Information</h2>
-      <p className="text-sm text-slate-500 mb-6">
-        Tell us about your business
-      </p>
+      <div className="space-y-2">
+        <Label htmlFor="businessName">Business Name</Label>
+        <Input
+          id="businessName"
+          name="businessName"
+          placeholder="Your Business Name"
+          value={formData.businessName}
+          onChange={handleChange}
+          required
+        />
+      </div>
       
-      <div className="space-y-4">
-        <div className="grid gap-2">
-          <Label htmlFor="businessName">Business Name</Label>
-          <Input
-            id="businessName"
-            name="businessName"
-            placeholder="Your Business Name"
-            value={formData.businessName}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        
-        <div className="grid gap-2">
-          <Label htmlFor="businessType">Business Type</Label>
-          <Select 
-            value={formData.businessType} 
-            onValueChange={(value) => handleSelectChange('businessType', value)}
-            required
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select business type" />
-            </SelectTrigger>
-            <SelectContent>
-              {businessTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="grid gap-2">
-          <Label htmlFor="phone">Business Phone</Label>
-          <Input
-            id="phone"
-            name="phone"
-            type="tel"
-            placeholder="+91 XXXXXXXXXX"
-            value={formData.phone}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        
-        <div className="grid gap-2">
-          <Label htmlFor="gstin">GSTIN (Optional)</Label>
-          <Input
-            id="gstin"
-            name="gstin"
-            placeholder="22AAAAA0000A1Z5"
-            value={formData.gstin}
-            onChange={handleChange}
-          />
-          <p className="text-xs text-slate-500">
-            You can add this later from your account settings
-          </p>
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="businessType">Business Type</Label>
+        <Select 
+          value={formData.businessType} 
+          onValueChange={(value) => handleSelectChange('businessType', value)}
+          required
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select business type" />
+          </SelectTrigger>
+          <SelectContent>
+            {businessTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="phone">Business Phone</Label>
+        <Input
+          id="phone"
+          name="phone"
+          type="tel"
+          placeholder="+91 XXXXXXXXXX"
+          value={formData.phone}
+          onChange={handleChange}
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="gstin">GSTIN (Optional)</Label>
+        <Input
+          id="gstin"
+          name="gstin"
+          placeholder="22AAAAA0000A1Z5"
+          value={formData.gstin}
+          onChange={handleChange}
+        />
+        <p className="text-xs text-muted-foreground">
+          You can add this later from your account settings
+        </p>
       </div>
     </div>
   );
 
   const renderStepThree = () => (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Business Address</h2>
-      <p className="text-sm text-slate-500 mb-6">
-        Where is your business located?
-      </p>
+      <div className="space-y-2">
+        <Label htmlFor="address">Street Address</Label>
+        <Input
+          id="address"
+          name="address"
+          placeholder="123 Business Street"
+          value={formData.address}
+          onChange={handleChange}
+          required
+        />
+      </div>
       
-      <div className="space-y-4">
-        <div className="grid gap-2">
-          <Label htmlFor="address">Street Address</Label>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="city">City</Label>
           <Input
-            id="address"
-            name="address"
-            placeholder="123 Business Street"
-            value={formData.address}
+            id="city"
+            name="city"
+            placeholder="Mumbai"
+            value={formData.city}
             onChange={handleChange}
             required
           />
         </div>
         
-        <div className="grid grid-cols-2 gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="city">City</Label>
-            <Input
-              id="city"
-              name="city"
-              placeholder="Mumbai"
-              value={formData.city}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="state">State</Label>
-            <Input
-              id="state"
-              name="state"
-              placeholder="Maharashtra"
-              value={formData.state}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        </div>
-        
-        <div className="grid gap-2">
-          <Label htmlFor="pincode">Pincode</Label>
+        <div className="space-y-2">
+          <Label htmlFor="state">State</Label>
           <Input
-            id="pincode"
-            name="pincode"
-            type="number"
-            placeholder="400001"
-            value={formData.pincode}
+            id="state"
+            name="state"
+            placeholder="Maharashtra"
+            value={formData.state}
             onChange={handleChange}
             required
           />
         </div>
-        
-        <div className="flex items-center space-x-2 mt-4">
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="pincode">Pincode</Label>
+        <Input
+          id="pincode"
+          name="pincode"
+          type="number"
+          placeholder="400001"
+          value={formData.pincode}
+          onChange={handleChange}
+          required
+        />
+      </div>
+      
+      <div className="flex items-start space-x-2 pt-2">
+        <div className="flex items-center h-5 mt-0.5">
           <input
             id="terms"
             type="checkbox"
-            className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
+            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
             required
           />
-          <label
-            htmlFor="terms"
-            className="text-sm text-slate-600"
-          >
-            I agree to the{' '}
-            <Link href="/terms" className="text-red-600 hover:underline">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="text-red-600 hover:underline">
-              Privacy Policy
-            </Link>
-          </label>
         </div>
+        <label
+          htmlFor="terms"
+          className="text-sm text-muted-foreground"
+        >
+          I agree to the{' '}
+          <Link href="/terms" className="text-primary hover:underline">
+            Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link href="/privacy" className="text-primary hover:underline">
+            Privacy Policy
+          </Link>
+        </label>
       </div>
     </div>
   );
 
   const renderStepIndicator = () => (
-    <div className="flex justify-between items-center mb-8">
+    <div className="flex justify-between items-center mb-6">
       {[1, 2, 3].map((stepNumber) => (
         <div key={stepNumber} className="flex items-center">
           <div
-            className={`flex items-center justify-center w-8 h-8 rounded-full ${
+            className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
               step >= stepNumber
-                ? 'bg-red-600 text-white'
-                : 'bg-slate-100 text-slate-500'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
             }`}
           >
             {stepNumber}
           </div>
           {stepNumber < 3 && (
-            <div className="w-16 h-0.5 bg-slate-200 mx-2"></div>
+            <div className="w-16 h-0.5 bg-border mx-2"></div>
           )}
         </div>
       ))}
     </div>
   );
 
+  const getStepTitle = () => {
+    switch (step) {
+      case 1: return 'Create your seller account';
+      case 2: return 'Business Information';
+      case 3: return 'Business Address';
+      default: return 'Create Account';
+    }
+  };
+
+  const getStepDescription = () => {
+    switch (step) {
+      case 1: return 'Enter your email and create a password to get started';
+      case 2: return 'Tell us about your business';
+      case 3: return 'Where is your business located?';
+      default: return '';
+    }
+  };
+
   return (
-    <div className="container flex h-screen w-screen flex-col items-center justify-center">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[500px] p-8 bg-white rounded-lg shadow-sm">
-        <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {step === 1 ? 'Create your seller account' : 
-             step === 2 ? 'Business Information' : 'Business Address'}
-          </h1>
-        </div>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold">{getStepTitle()}</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            {getStepDescription()}
+          </CardDescription>
+        </CardHeader>
         
-        {renderStepIndicator()}
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {step === 1 && renderStepOne()}
-          {step === 2 && renderStepTwo()}
-          {step === 3 && renderStepThree()}
+        <CardContent>
+          {renderStepIndicator()}
           
-          <div className="flex justify-between pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={prevStep}
-              disabled={step === 1 || isLoading}
-            >
-              Back
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              {step === 3 ? 'Create Account' : 'Continue'}
-            </Button>
-          </div>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {step === 1 && renderStepOne()}
+            {step === 2 && renderStepTwo()}
+            {step === 3 && renderStepThree()}
+            
+            <div className="flex justify-between pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={prevStep}
+                disabled={step === 1 || isLoading}
+              >
+                Back
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {step === 3 ? 'Creating Account...' : 'Continue'}
+                  </>
+                ) : (
+                  step === 3 ? 'Create Account' : 'Continue'
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
         
-        <p className="px-8 text-center text-sm text-slate-600">
-          Already have an account?{' '}
-          <Link
-            href="/auth/login"
-            className="text-red-600 hover:underline underline-offset-4"
-          >
-            Sign in
-          </Link>
-        </p>
-      </div>
+        <CardFooter className="flex flex-col items-center justify-center space-y-4 border-t px-6 py-4">
+          <p className="text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <Link
+              href="/auth/login"
+              className="font-medium text-primary hover:underline"
+            >
+              Sign in
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

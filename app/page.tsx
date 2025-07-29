@@ -129,7 +129,7 @@ export default function SellerHomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-red-600 to-red-700 text-white">
+      <section className="py-20 bg-gradient-to-r from-red-500 to-red-600 text-white">
         <div className="container mx-auto px-6 max-w-4xl text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-full mb-6">
             <Zap className="w-8 h-8" />

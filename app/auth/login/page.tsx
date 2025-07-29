@@ -1,13 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2Icon } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { FaGoogle } from 'react-icons/fa';
 import { toast } from 'sonner';
 
 export default function LoginPage() {
@@ -32,12 +32,12 @@ export default function LoginPage() {
       // Redirect to seller dashboard on successful login
       router.push('/dashboard');
       
-      toast('Login successful',{
+      toast('Login successful', {
         description: 'Welcome back to your seller dashboard!',
       });
     } catch (error) {
       console.error('Login error:', error);
-      toast('Login failed',{
+      toast('Login failed', {
         description: 'Invalid email or password. Please try again.',
       });
     } finally {
@@ -54,98 +54,84 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="container flex h-screen w-screen flex-col items-center justify-center">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-        <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-          <p className="text-sm text-slate-500">
-            Enter your email and password to access your seller account
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+          <CardDescription className="text-gray-500">
+            Enter your credentials to access your seller account
+          </CardDescription>
+        </CardHeader>
         
-        <div className="grid gap-6">
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  placeholder="name@yourbusiness.com"
-                  type="email"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  autoCorrect="off"
-                  disabled={isLoading}
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                placeholder="name@yourbusiness.com"
+                type="email"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect="off"
+                disabled={isLoading}
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-sm text-primary hover:underline"
+                >
+                  Forgot password?
+                </Link>
               </div>
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/auth/forgot-password"
-                    className="text-sm text-slate-600 hover:text-slate-900"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  name="password"
-                  placeholder="••••••••"
-                  type="password"
-                  autoComplete="current-password"
-                  disabled={isLoading}
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading && (
-                  <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Sign In
-              </Button>
+              <Input
+                id="password"
+                name="password"
+                placeholder="••••••••"
+                type="password"
+                autoComplete="current-password"
+                disabled={isLoading}
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full"
+              />
             </div>
-          </form>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" type="button" disabled={isLoading}>
+            
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
-                <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                <>
+                  <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
               ) : (
-                <FaGoogle className="mr-2 h-4 w-4" />
+                'Sign In'
               )}
-              Google
             </Button>
-          </div>
-        </div>
-
-        <p className="px-8 text-center text-sm text-slate-600">
-          Don&apos;t have an account?{' '}
-          <Link
-            href="/auth/signup"
-            className="hover:text-brand underline underline-offset-4"
-          >
-            Sign up
-          </Link>
-        </p>
-      </div>
+          </form>
+        </CardContent>
+        
+        <CardFooter className="flex flex-col items-center justify-center space-y-4 border-t px-6 py-4">
+          <p className="text-sm text-gray-500">
+            Don&apos;t have an account?{' '}
+            <Link
+              href="/auth/signup"
+              className="font-medium text-primary hover:underline"
+            >
+              Sign up
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

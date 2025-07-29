@@ -1,16 +1,16 @@
-import { MessageCircle, UserIcon } from "lucide-react";
+import { UserIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
-    NavigationMenu,
-    NavigationMenuItem,
-    NavigationMenuLink,
-    NavigationMenuList,
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover";
 import { Images } from "@/utils/constant";
 import Link from "next/link";
@@ -120,17 +120,16 @@ export default function Header() {
           {/* Right side - Action buttons */}
           <div className="flex items-center gap-3">
             {/* Chat */}
-            <Link href="/chat">
+            {/* <Link href="/chat">
               <Button
                 variant="outline"
                 size="icon"
                 className="size-10 border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors relative"
               >
                 <MessageCircle className="w-4 h-4 text-slate-600" />
-                {/* Chat notification dot */}
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
               </Button>
-            </Link>
+            </Link> */}
 
             {/* User menu */}
             <Button
