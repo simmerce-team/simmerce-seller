@@ -33,19 +33,49 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: DO NOT REMOVE auth.getClaims()
 
-  // const {
-  //   data,
-  // } = await supabase.auth.getClaims()
-
-  // if (
-  //   !data &&
-  //   !request.nextUrl.pathname.startsWith('/auth')
-  // ) {
-  //   // no user, potentially respond by redirecting the user to the login page
-  //   const url = request.nextUrl.clone()
-  //   url.pathname = '/auth/login'
-  //   return NextResponse.redirect(url)
-  // }
+  // Get the user's session
+  const { data } = await supabase.auth.getClaims()
+  
+  // Define public paths that don't require authentication
+  const publicPaths = [
+    '/auth',
+    '/auth/login',
+    '/auth/signup',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+    '/auth/verify-email',
+    '/_next',
+    '/favicon.ico',
+    '/api/auth/callback',
+  ]
+  
+  // Check if the current path is public
+  const isPublicPath = publicPaths.some(path => 
+    request.nextUrl.pathname === path || 
+    request.nextUrl.pathname.startsWith(`${path}/`)
+  )
+  
+  // If user is not authenticated and trying to access a protected route
+  if (!data && !isPublicPath) {
+    // Create a redirect URL to the login page
+    const redirectUrl = new URL('/auth', request.url)
+    // Store the original URL the user was trying to access
+    redirectUrl.searchParams.set('redirectedFrom', request.nextUrl.pathname)
+    
+    // Don't redirect if we're already on the auth page to prevent loops
+    if (!request.nextUrl.pathname.startsWith('/auth')) {
+      return NextResponse.redirect(redirectUrl)
+    }
+  }
+  
+  // If user is authenticated but trying to access auth pages, redirect to dashboard
+  if (data && request.nextUrl.pathname.startsWith('/auth')) {
+    // Skip redirect for auth callback routes
+    if (!request.nextUrl.pathname.startsWith('/auth/callback')) {
+      const redirectUrl = new URL('/dashboard', request.url)
+      return NextResponse.redirect(redirectUrl)
+    }
+  }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:

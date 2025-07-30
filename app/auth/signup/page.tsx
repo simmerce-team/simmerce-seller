@@ -1,39 +1,43 @@
 'use client';
 
+import { signUp } from '@/actions/auth';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-const businessTypes = [
-  'Manufacturer',
-  'Wholesaler',
-  'Distributor',
-  'Retailer',
-  'Service Provider',
-  'Other',
-];
+interface BusinessType {
+  id: string;
+  name: string;
+  description: string | null;
+}
 
-export default function SignUpPage() {
-  const [isLoading, setIsLoading] = useState(false);
+function SignUpContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [email, setEmail] = useState('');
+  const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
+  const [isLoadingBusinessTypes, setIsLoadingBusinessTypes] = useState(true);
   const [formData, setFormData] = useState({
     // Step 1: Account Information
-    email: '',
+    fullName: '',
     password: '',
     confirmPassword: '',
+    phone: '',
     
     // Step 2: Business Information
     businessName: '',
-    businessType: '',
-    phone: '',
-    gstin: '',
+    businessTypeId: '',
+    gstNumber: '',
     
     // Step 3: Additional Details
     address: '',
@@ -42,8 +46,53 @@ export default function SignUpPage() {
     pincode: '',
   });
   
-  const router = useRouter();
+  // Fetch business types when component mounts
+  useEffect(() => {
+    const fetchBusinessTypes = async () => {
+      try {
+        const { createClient } = await import('@/utils/supabase/client');
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('business_types')
+          .select('*')
+          .order('name', { ascending: true });
 
+
+        if (error) {
+          console.error('Error fetching business types:', error);
+          toast.error('Failed to load business types');
+          return;
+        }
+
+        setBusinessTypes(data || []);
+
+      } catch (error) {
+        console.error('Error in fetchBusinessTypes:', error);
+        toast.error('An error occurred while loading business types');
+      } finally {
+        setIsLoadingBusinessTypes(false);
+      }
+    };
+
+    fetchBusinessTypes();
+  }, []);
+
+  // Log when business types are updated
+  useEffect(() => {
+    console.log('Business types state updated:', businessTypes);
+  }, [businessTypes]);
+
+  // Handle email from query params
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    if (emailParam) {
+      setEmail(decodeURIComponent(emailParam));
+    } else {
+      // If no email is provided, redirect to the auth page
+      router.push('/auth');
+    }
+  }, [searchParams, router]);
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -62,60 +111,164 @@ export default function SignUpPage() {
   const nextStep = () => setStep(prev => prev + 1);
   const prevStep = () => setStep(prev => prev - 1);
 
+  const validateStep = (step: number): boolean => {
+    if (step === 1) {
+      if (!formData.fullName) {
+        toast('Full name is required');
+        return false;
+      }
+      if (!formData.password) {
+        toast('Password is required');
+        return false;
+      }
+      if (formData.password.length < 8) {
+        toast('Password must be at least 8 characters');
+        return false;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        toast('Passwords do not match');
+        return false;
+      }
+    } else if (step === 2) {
+      if (!formData.businessName) {
+        toast('Business name is required');
+        return false;
+      }
+      if (!formData.businessTypeId) {
+        toast('Please select a business type');
+        return false;
+      }
+    } else if (step === 3) {
+      if (!formData.address) {
+        toast('Address is required');
+        return false;
+      }
+      if (!formData.city) {
+        toast('City is required');
+        return false;
+      }
+      if (!formData.state) {
+        toast('State is required');
+        return false;
+      }
+      if (!formData.pincode) {
+        toast('Pincode is required');
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (step < 3) {
+      if (!validateStep(step)) {
+        return;
+      }
       nextStep();
       return;
     }
     
-    setIsLoading(true);
+    // Final validation
+    if (!validateStep(3)) {
+      return;
+    }
     
-    try {
-      // TODO: Implement actual signup logic with your auth provider
-      console.log('Signup attempt with:', formData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Redirect to verification/setup page
-      router.push('/auth/verify-email');
-      
-      toast('Account created successfully!', {
-        description: 'Please verify your email to continue.',
-      });
-    } catch (error) {
-      console.error('Signup error:', error);
-      toast('Signup failed', {
-        description: error instanceof Error ? error.message : 'An error occurred. Please try again.',
-      });
-    } finally {
-      setIsLoading(false);
+    setIsSubmitting(true);
+    
+    startTransition(async () => {
+      try {
+        const result = await signUp({
+          email,
+          password: formData.password,
+          fullName: formData.fullName,
+          phone: formData.phone,
+          businessName: formData.businessName,
+          businessTypeId: formData.businessTypeId,
+          gstNumber: formData.gstNumber || undefined,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode,
+        });
+
+        if (!result.success) {
+          throw new Error(result.error || 'Signup failed');
+        }
+        
+        // Redirect to dashboard after successful signup
+        router.push('/dashboard');
+        
+        toast('Account created successfully!', {
+          description: 'Welcome to your seller dashboard!',
+        });
+      } catch (error) {
+        console.error('Signup error:', error);
+        toast('Signup failed', {
+          description: error instanceof Error ? error.message : 'An error occurred. Please try again.',
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    });
+  };
+
+  const handleBack = () => {
+    if (step === 1) {
+      router.push('/auth');
+    } else {
+      setStep(prev => prev - 1);
     }
   };
 
   const renderStepOne = () => (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Business Email</Label>
+        <Label>Email</Label>
+        <div className="p-2 border rounded-md bg-gray-50 text-gray-700">
+          {email}
+        </div>
+        <p className="text-sm text-muted-foreground">
+          This will be your account email
+        </p>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="fullName">Full Name</Label>
         <Input
-          id="email"
-          name="email"
-          type="email"
-          placeholder="name@yourbusiness.com"
-          value={formData.email}
+          id="fullName"
+          name="fullName"
+          placeholder="John Doe"
+          disabled={isPending || isSubmitting}
+          value={formData.fullName}
           onChange={handleChange}
           required
         />
       </div>
+      
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="phone">Phone Number</Label>
+        <Input
+          id="phone"
+          name="phone"
+          type="tel"
+          placeholder="+91 9876543210"
+          disabled={isPending || isSubmitting}
+          value={formData.phone}
+          onChange={handleChange}
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="password">Create a Password</Label>
         <Input
           id="password"
           name="password"
-          type="password"
           placeholder="••••••••"
+          type="password"
+          autoComplete="new-password"
+          disabled={isPending || isSubmitting}
           value={formData.password}
           onChange={handleChange}
           required
@@ -125,13 +278,16 @@ export default function SignUpPage() {
           Must be at least 8 characters
         </p>
       </div>
+      
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Confirm Password</Label>
         <Input
           id="confirmPassword"
           name="confirmPassword"
-          type="password"
           placeholder="••••••••"
+          type="password"
+          autoComplete="new-password"
+          disabled={isPending || isSubmitting}
           value={formData.confirmPassword}
           onChange={handleChange}
           required
@@ -147,7 +303,8 @@ export default function SignUpPage() {
         <Input
           id="businessName"
           name="businessName"
-          placeholder="Your Business Name"
+          placeholder="Acme Inc."
+          disabled={isPending || isSubmitting}
           value={formData.businessName}
           onChange={handleChange}
           required
@@ -156,18 +313,22 @@ export default function SignUpPage() {
       
       <div className="space-y-2">
         <Label htmlFor="businessType">Business Type</Label>
-        <Select 
-          value={formData.businessType} 
-          onValueChange={(value) => handleSelectChange('businessType', value)}
-          required
+        <Select
+          onValueChange={(value) => handleSelectChange('businessTypeId', value)}
+          value={formData.businessTypeId}
+          disabled={isLoadingBusinessTypes}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select business type" />
+            <SelectValue placeholder={
+              isLoadingBusinessTypes 
+                ? 'Loading business types...' 
+                : 'Select business type'
+            } />
           </SelectTrigger>
           <SelectContent>
             {businessTypes.map((type) => (
-              <SelectItem key={type} value={type}>
-                {type}
+              <SelectItem key={type.id} value={type.id}>
+                {type.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -175,25 +336,13 @@ export default function SignUpPage() {
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="phone">Business Phone</Label>
+        <Label htmlFor="gstNumber">GSTIN (Optional)</Label>
         <Input
-          id="phone"
-          name="phone"
-          type="tel"
-          placeholder="+91 XXXXXXXXXX"
-          value={formData.phone}
-          onChange={handleChange}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="gstin">GSTIN (Optional)</Label>
-        <Input
-          id="gstin"
-          name="gstin"
+          id="gstNumber"
+          name="gstNumber"
           placeholder="22AAAAA0000A1Z5"
-          value={formData.gstin}
+          disabled={isPending || isSubmitting}
+          value={formData.gstNumber}
           onChange={handleChange}
         />
         <p className="text-xs text-muted-foreground">
@@ -303,77 +452,82 @@ export default function SignUpPage() {
     </div>
   );
 
-  const getStepTitle = () => {
-    switch (step) {
-      case 1: return 'Create your seller account';
-      case 2: return 'Business Information';
-      case 3: return 'Business Address';
-      default: return 'Create Account';
-    }
-  };
-
-  const getStepDescription = () => {
-    switch (step) {
-      case 1: return 'Enter your email and create a password to get started';
-      case 2: return 'Tell us about your business';
-      case 3: return 'Where is your business located?';
-      default: return '';
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">{getStepTitle()}</CardTitle>
-          <CardDescription className="text-muted-foreground">
-            {getStepDescription()}
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">
+            {step === 1 && 'Create your account'}
+            {step === 2 && 'Business Information'}
+            {step === 3 && 'Business Address'}
+          </CardTitle>
+          <CardDescription className="text-center">
+            {step === 1 && `Sign up with ${email}`}
+            {step === 2 && 'Tell us about your business'}
+            {step === 3 && 'Where is your business located?'}
           </CardDescription>
         </CardHeader>
         
-        <CardContent>
-          {renderStepIndicator()}
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-6">
+            {step > 1 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleBack}
+                className="px-0 text-muted-foreground"
+              >
+                <ArrowLeft className="mr-1 h-4 w-4" />
+                Back
+              </Button>
+            )}
+            
             {step === 1 && renderStepOne()}
             {step === 2 && renderStepTwo()}
             {step === 3 && renderStepThree()}
             
-            <div className="flex justify-between pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={prevStep}
-                disabled={step === 1 || isLoading}
-              >
-                Back
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {step === 3 ? 'Creating Account...' : 'Continue'}
-                  </>
-                ) : (
-                  step === 3 ? 'Create Account' : 'Continue'
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-        
-        <CardFooter className="flex flex-col items-center justify-center space-y-4 border-t px-6 py-4">
-          <p className="text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <Link
-              href="/auth/login"
-              className="font-medium text-primary hover:underline"
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isPending || isSubmitting}
             >
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
+              {(isPending || isSubmitting) ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : step === 3 ? (
+                'Create Account'
+              ) : (
+                'Continue'
+              )}
+            </Button>
+            
+            <p className="text-center text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <Link 
+                href={`/auth/login?email=${encodeURIComponent(email)}`} 
+                className="text-primary hover:underline"
+              >
+                Log in
+              </Link>
+            </p>
+          </CardContent>
+        </form>
       </Card>
     </div>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    }>
+      <SignUpContent />
+    </Suspense>
   );
 }

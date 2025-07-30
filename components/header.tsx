@@ -1,4 +1,3 @@
-import { UserIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,25 +14,21 @@ import {
 import { Images } from "@/utils/constant";
 import Link from "next/link";
 import { MegaMenu } from "./navigation/mega-menu";
+import UserDropdown from "./user-dropdown";
 
 // Mobile navigation links
 const mobileNavigationLinks = [
   { href: "/dashboard", label: "Dashboard", active: true },
   { href: "/products", label: "Products" },
-  { href: "/leads", label: "Leads" },
-  { href: "/inventory", label: "Inventory" },
-  { href: "/analytics", label: "Analytics" },
-  { href: "/settings", label: "Settings" },
 ];
 
 export default function Header() {
   return (
     <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/60">
-      {/* Main Header - Clean with only logo, search, and actions */}
-      <header className="h-[70px] px-6 md:px-8">
+      <header className="h-[70px] px-4 sm:px-6 lg:px-8">
         <div className="flex h-full items-center justify-between gap-6 max-w-7xl mx-auto">
           {/* Left side - Logo and Mobile Menu */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Mobile menu trigger */}
             <Popover>
               <PopoverTrigger asChild>
@@ -94,12 +89,12 @@ export default function Header() {
             {/* Logo */}
             <Link
               href="/dashboard"
-              className="flex items-center gap-3 text-slate-800 hover:text-red-600 transition-colors group"
+              className="flex items-center gap-2 sm:gap-3 text-slate-800 hover:text-red-600 transition-colors group"
             >
               <img
                 src={Images.logo512}
                 alt="Simmerce"
-                className="w-11 h-11 rounded-lg shadow-sm group-hover:shadow-md transition-shadow"
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg shadow-sm group-hover:shadow-md transition-shadow"
               />
               <div className="hidden md:block">
                 <span className="text-xl font-semibold tracking-tight">
@@ -118,27 +113,11 @@ export default function Header() {
           </div>
 
           {/* Right side - Action buttons */}
-          <div className="flex items-center gap-3">
-            {/* Chat */}
-            {/* <Link href="/chat">
-              <Button
-                variant="outline"
-                size="icon"
-                className="size-10 border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors relative"
-              >
-                <MessageCircle className="w-4 h-4 text-slate-600" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
-              </Button>
-            </Link> */}
-
-            {/* User menu */}
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-10 border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors"
-            >
-              <UserIcon className="w-4 h-4 text-slate-600" />
-            </Button>
+          <div className="flex items-center gap-1 sm:gap-2">
+            {/* User Dropdown */}
+            <div className="ml-1">
+              <UserDropdown />
+            </div>
           </div>
         </div>
       </header>
