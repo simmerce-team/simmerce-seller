@@ -68,7 +68,6 @@ create table products (
   description jsonb,
   category_id uuid references categories(id) on delete set null,
   price numeric(10,2) not null,
-  compare_at_price numeric(10,2),
   unit text not null,
   moq int not null default 1,
   stock_quantity int default 0,

@@ -26,6 +26,18 @@ export function MegaMenu() {
     <div className="hidden lg:flex">
       <NavigationMenu value={activeMenu} onValueChange={handleMenuChange}>
         <NavigationMenuList className="gap-1">
+        <NavigationMenuItem>
+            <NavigationMenuLink
+              href="/dashboard"
+              onClick={handleLinkClick}
+              className={cn(
+                "group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-red-50/50 hover:text-red-600 focus:bg-red-50 focus:text-red-600 focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-red-50/50 data-[state=open]:bg-red-50/50",
+                "text-slate-700"
+              )}
+            >
+              Dashboard
+            </NavigationMenuLink>
+          </NavigationMenuItem>
           <NavigationMenuItem>
             <NavigationMenuLink
               href="/products"

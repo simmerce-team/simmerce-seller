@@ -215,7 +215,7 @@ export async function checkEmailExists(email: string): Promise<boolean> {
   const supabase = await createClient();
   
   const { data, error } = await supabase
-    .from('auth.users')
+    .from('users')
     .select('email')
     .eq('email', email)
     .single();

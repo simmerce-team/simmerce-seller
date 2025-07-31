@@ -34,9 +34,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         setUser(session?.user ?? null);
         
-        // Redirect to login if not authenticated and not on a public route
-        if (!session?.user && !['/auth/login', '/auth/signup', '/auth/reset-password'].includes(pathname)) {
-          router.push('/auth/login');
+        // Only redirect if we have a session state
+        if (!session?.user) {
+          // Only redirect to login if we're not already on an auth page
+          const isAuthPage = ['/auth', '/auth/login', '/auth/signup', '/auth/reset-password'].some(
+            path => pathname.startsWith(path)
+          );
+          
+          if (!isAuthPage) {
+            router.push('/auth');
+          }
+        } else if (['/auth', '/auth/login', '/auth/signup'].includes(pathname)) {
+          // If user is logged in and tries to access auth pages, redirect to dashboard
+          router.push('/dashboard');
         }
       } catch (error) {
         console.error('Error in auth state change:', error);
@@ -51,11 +61,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
       
-      // Redirect based on auth state
-      if (event === 'SIGNED_IN' && pathname === '/auth/login') {
-        router.push('/dashboard');
+      // Handle auth state changes
+      if (event === 'SIGNED_IN') {
+        // If user just signed in, redirect to dashboard if they're on an auth page
+        if (['/auth', '/auth/login', '/auth/signup'].includes(pathname)) {
+          router.push('/dashboard');
+        }
       } else if (event === 'SIGNED_OUT') {
-        router.push('/auth/login');
+        // Only redirect to auth if we're not already on an auth page
+        const isAuthPage = ['/auth', '/auth/login', '/auth/signup', '/auth/reset-password'].some(
+          path => pathname.startsWith(path)
+        );
+        
+        if (!isAuthPage) {
+          router.push('/auth');
+        }
       }
     });
 

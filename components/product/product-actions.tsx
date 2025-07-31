@@ -13,8 +13,6 @@ interface ProductActionsProps {
 
 export function ProductActions({ 
   productId, 
-  price,
-  sellerId,
   className = '' 
 }: ProductActionsProps) {
 
