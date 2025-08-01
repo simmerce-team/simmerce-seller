@@ -163,7 +163,6 @@ export default function AddProductPage() {
           barcode: formData.barcode ? formData.barcode.trim() : null,
           category_id: formData.category_id,
           is_active: formData.is_active,
-          is_featured: formData.is_featured,
         });
 
         if (error || !product) {
@@ -406,18 +405,6 @@ export default function AddProductPage() {
                       id="is_active"
                       checked={formData.is_active}
                       onCheckedChange={(checked) => handleSwitchChange('is_active', checked)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="is_featured">Featured</Label>
-                      <p className="text-xs text-gray-500">Featured products will be shown in featured section</p>
-                    </div>
-                    <Switch
-                      id="is_featured"
-                      checked={formData.is_featured}
-                      onCheckedChange={(checked) => handleSwitchChange('is_featured', checked)}
                     />
                   </div>
                 </div>

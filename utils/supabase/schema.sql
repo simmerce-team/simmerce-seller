@@ -13,7 +13,6 @@ create table cities (
   name text not null,
   state text,
   country text default 'India',
-  pincode text,
   created_at timestamp with time zone default now()
 );
 
@@ -33,6 +32,7 @@ create table businesses (
   logo_url text,
   gst_number text,
   address text,
+  pincode text,
   city_id uuid references cities(id) on delete set null,
   business_type_id uuid references business_types(id) on delete set null,
   is_verified boolean default false,

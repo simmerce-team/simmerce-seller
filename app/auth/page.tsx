@@ -73,13 +73,7 @@ export default function AuthPage() {
               Continue
             </Button>
           </form>
-        </CardContent>
-        
-        <div className="px-6 pb-6 text-center text-sm text-muted-foreground">
-          By continuing, you agree to our{' '}
-          <a href="/terms" className="underline underline-offset-4 hover:text-primary">Terms of Service</a> and{' '}
-          <a href="/privacy" className="underline underline-offset-4 hover:text-primary">Privacy Policy</a>.
-        </div>
+        </CardContent>        
       </Card>
     </div>
   );

@@ -63,7 +63,6 @@ export async function signUp(formData: {
       .select('id')
       .eq('name', formData.city)
       .eq('state', formData.state)
-      .eq('pincode', formData.pincode)
       .single();
     
     if (cityLookupError && cityLookupError.code !== 'PGRST116') { // PGRST116 = no rows found
@@ -80,7 +79,6 @@ export async function signUp(formData: {
         .insert({
           name: formData.city,
           state: formData.state,
-          pincode: formData.pincode,
           country: 'India'
         })
         .select('id')
@@ -115,6 +113,7 @@ export async function signUp(formData: {
         gst_number: formData.gstNumber || null,
         address: formData.address,
         city_id: cityId,
+        pincode: formData.pincode,
         is_verified: false,
       })
       .select('id')

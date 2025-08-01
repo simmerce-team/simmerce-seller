@@ -14,7 +14,6 @@ export type AddProductInput = {
   sku?: string | null;
   barcode?: string | null;
   is_active?: boolean;
-  is_featured?: boolean;
   category_id?: string | null;
 };
 
@@ -47,7 +46,6 @@ export async function addProduct(productData: AddProductInput) {
       ...productData,
       business_id: userBusiness.business_id,
       is_active: productData.is_active ?? true,
-      is_featured: productData.is_featured ?? false,
       view_count: 0,
       enquiry_count: 0,
     };
