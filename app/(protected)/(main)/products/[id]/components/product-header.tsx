@@ -9,9 +9,7 @@ import { deleteProduct } from "../../../../../../actions/show-product";
 type ProductHeaderProps = {
   product: {
     id: string;
-    name: string;
     status: string;
-    sku: string;
     updated_at: string;
     view_count: number;
   };
@@ -44,7 +42,7 @@ export function ProductHeader({ product }: ProductHeaderProps) {
         variant="ghost" 
         size="sm" 
         className="gap-2" 
-        onClick={() => router.back()}
+        onClick={() => router.push("/products")}
       >
         <ArrowLeft className="h-4 w-4" />
         <span>Back to Products</span>

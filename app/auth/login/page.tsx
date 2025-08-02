@@ -3,9 +3,9 @@
 import { login } from '@/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { PasswordInput } from '../shared/components/forms';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState, useTransition } from 'react';
@@ -18,7 +18,7 @@ function LoginContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
+
   useEffect(() => {
     const emailParam = searchParams.get('email');
     if (emailParam) {
@@ -92,27 +92,22 @@ function LoginContent() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Link
-                  href={`/auth/forgot-password?email=${encodeURIComponent(email)}`}
-                  className="text-sm text-primary hover:underline"
-                >
-                  Forgot password?
-                </Link>
+                <PasswordInput
+                  id="password"
+                  value={password}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                  disabled={isPending || isSubmitting}
+                  required
+                />
               </div>
-              <Input
-                id="password"
-                name="password"
-                placeholder="••••••••"
-                type="password"
-                autoComplete="current-password"
-                disabled={isPending || isSubmitting}
-                value={password}
-                onChange={handlePasswordChange}
-                required
-                className="w-full"
-              />
+              <Link
+                href={`/auth/forgot-password?email=${encodeURIComponent(email)}`}
+                className="text-sm text-primary hover:underline"
+              >
+                Forgot password?
+              </Link>
             </div>
             
             <Button 

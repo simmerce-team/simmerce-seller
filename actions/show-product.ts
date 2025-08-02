@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { Product } from '../app/(protected)/(main)/products/[id]/types';
 
+
 export async function getProductById(id: string): Promise<{ data: Product | null; error: string | null }> {
   const supabase = await createClient();
   
@@ -45,6 +46,36 @@ export async function getProductById(id: string): Promise<{ data: Product | null
   }
 }
 
+export async function updateProduct(
+  id: string, 
+  updates: Partial<Product>
+): Promise<{ data: Product | null; error: string | null }> {
+  const supabase = await createClient();
+  
+  try {
+    const { data: updatedProduct, error } = await supabase
+      .from('products')
+      .update(updates)
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error updating product:', error);
+      return { data: null, error: error.message };
+    }
+
+    // Fetch the updated product with all relations
+    return getProductById(id);
+  } catch (error) {
+    console.error('Unexpected error updating product:', error);
+    return { 
+      data: null, 
+      error: error instanceof Error ? error.message : 'An unexpected error occurred' 
+    };
+  }
+}
+
 export async function deleteProduct(id: string): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
   
@@ -54,13 +85,17 @@ export async function deleteProduct(id: string): Promise<{ success: boolean; err
       .delete()
       .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error deleting product:', error);
+      return { success: false, error: error.message };
+    }
+
     return { success: true };
   } catch (error) {
-    console.error('Error deleting product:', error);
+    console.error('Unexpected error deleting product:', error);
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'Failed to delete product' 
+      error: error instanceof Error ? error.message : 'An unexpected error occurred' 
     };
   }
 }

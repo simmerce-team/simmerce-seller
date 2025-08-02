@@ -4,13 +4,13 @@ import { logout } from "@/actions/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LogOut, Settings, User2 } from "lucide-react";
@@ -32,17 +32,30 @@ export default function UserDropdown() {
 
   const fetchUser = useCallback(async () => {
     try {
+      setIsLoading(true);
       const { getCurrentUser } = await import("@/actions/auth");
-      const { data, error } = await getCurrentUser();
+      const userData = await getCurrentUser();
       
-      if (error) {
-        console.error('Error fetching user:', error);
+      if (!userData) {
+        // If no user data, try to refresh the session
+        const { refreshSession } = await import('@/actions/refresh-session');
+        await refreshSession();
+        
+        // Try to get user again after refresh
+        const retryData = await getCurrentUser();
+        if (!retryData) {
+          console.error('Still unable to fetch user after refresh');
+          setUser(null);
+          return;
+        }
+        setUser(retryData);
         return;
       }
       
-      setUser(data);
+      setUser(userData);
     } catch (error) {
       console.error('Error in fetchUser:', error);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -73,8 +86,7 @@ export default function UserDropdown() {
   if (isLoading) {
     return (
       <div className="flex items-center space-x-2">
-        <Skeleton className="h-8 w-8 rounded-full" />
-        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-8 w-8 rounded-lg" />
       </div>
     );
   }
@@ -100,8 +112,8 @@ export default function UserDropdown() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="ghost"
-          className="relative h-8 w-8 rounded-full"
+          variant="outline"
+          className="relative h-8 w-8"
         >
           <Avatar className="h-8 w-8">
             {user.avatar_url ? (

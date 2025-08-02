@@ -1,5 +1,59 @@
--- 1. Users Table
-create table users (
+-- Enable necessary extensions
+create extension if not exists "uuid-ossp" with schema public;
+
+-- 0. Countries Table
+create table if not exists public.countries (
+  id uuid primary key default uuid_generate_v4(),
+  name text not null,
+  iso_code text,
+  phone_code text,
+  currency text,
+  currency_symbol text,
+  status text default 'active',
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now(),
+  constraint uq_country_name unique (name)
+);
+
+-- 1. States Table
+create table if not exists public.states (
+  id uuid primary key default uuid_generate_v4(),
+  name text not null,
+  country_id uuid not null references public.countries(id) on delete cascade,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now(),
+  constraint uq_state_name_country unique (name, country_id)
+);
+
+-- 2. Cities Table
+create table if not exists public.cities (
+  id uuid primary key default uuid_generate_v4(),
+  name text not null,
+  state_id uuid references public.states(id) on delete set null,
+  country_id uuid references public.countries(id) on delete set null,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now(),
+  constraint uq_city_state unique (name, state_id)
+);
+
+-- Create a view for cities with state and country information
+create or replace view public.cities_with_location as
+select 
+  c.id,
+  c.name as city_name,
+  s.name as state_name,
+  s.id as state_id,
+  co.name as country_name,
+  co.id as country_id,
+  c.created_at,
+  c.updated_at
+from 
+  public.cities c
+  left join public.states s on c.state_id = s.id
+  left join public.countries co on s.country_id = co.id or c.country_id = co.id;
+
+-- 3. Users Table
+create table if not exists public.users (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text,
   email text,
@@ -7,16 +61,7 @@ create table users (
   created_at timestamp with time zone default now()
 );
 
--- 2. Cities Table
-create table cities (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  state text,
-  country text default 'India',
-  created_at timestamp with time zone default now()
-);
-
--- 3. Business Types Table
+-- 7. Business Types Table
 create table business_types (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
@@ -39,7 +84,7 @@ create table businesses (
   created_at timestamp with time zone default now()
 );
 
--- 5. User ↔ Business Mapping
+-- 8. User ↔ Business Mapping
 create table user_businesses (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references users(id) on delete cascade,
@@ -49,7 +94,7 @@ create table user_businesses (
   constraint unique_user_business unique (user_id, business_id)
 );
 
--- 6. Categories Table (self-referential)
+-- 9. Categories Table (self-referential)
 create table categories (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -60,7 +105,7 @@ create table categories (
   updated_at timestamp with time zone default now()
 );
 
--- 7. Products Table
+-- 10. Products Table
 create table products (
   id uuid primary key default gen_random_uuid(),
   business_id uuid not null references businesses(id) on delete cascade,
@@ -83,7 +128,7 @@ create table products (
   constraint positive_stock check (stock_quantity >= 0)
 );
 
--- 8. Product Images
+-- 11. Product Images
 create table product_images (
   id uuid primary key default gen_random_uuid(),
   product_id uuid not null references products(id) on delete cascade,
@@ -94,7 +139,7 @@ create table product_images (
   created_at timestamp with time zone default now()
 );
 
--- 9. Product Views
+-- 12. Product Views
 create table product_views (
   id uuid primary key default gen_random_uuid(),
   product_id uuid not null references products(id) on delete cascade,
@@ -104,7 +149,7 @@ create table product_views (
   created_at timestamp with time zone default now()
 );
 
--- 10. Enquiries
+-- 13. Enquiries
 create table enquiries (
   id uuid primary key default gen_random_uuid(),
   product_id uuid references products(id) on delete cascade,
@@ -118,7 +163,7 @@ create table enquiries (
   updated_at timestamp with time zone default now()
 );
 
--- 11. Buy Leads
+-- 14. Buy Leads
 create table buy_leads (
   id uuid primary key default gen_random_uuid(),
   business_id uuid not null references businesses(id) on delete cascade,
@@ -134,7 +179,7 @@ create table buy_leads (
   updated_at timestamp with time zone default now()
 );
 
--- Indexes for better performance
+-- 15. Indexes for better performance
 create index idx_products_business_id on products(business_id);
 create index idx_products_category_id on products(category_id);
 create index idx_products_is_active on products(is_active);
@@ -142,7 +187,7 @@ create index idx_product_images_product_id on product_images(product_id);
 create index idx_enquiries_business_id on enquiries(business_id);
 create index idx_buy_leads_business_id on buy_leads(business_id);
 
--- Function to get business metrics for dashboard
+-- 16. Function to get business metrics for dashboard
 create or replace function public.get_business_metrics(p_business_id uuid)
 returns jsonb
 language plpgsql

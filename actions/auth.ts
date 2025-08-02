@@ -8,18 +8,24 @@ export async function signUp(formData: {
   fullName: string;
   phone?: string;
   businessName: string;
-  businessTypeId: string; // Changed from businessType to businessTypeId
+  businessTypeId: string;
   gstNumber?: string;
   address: string;
   city: string;
+  cityId?: string;
   state: string;
+  stateId?: string;
   pincode: string;
 }) {
   const supabase = await createClient();
 
   try {
-    // Start a transaction
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+    // 1. Sign up the user
+    let user = null;
+    let session = null;
+    
+    // First try to sign up the user
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
@@ -27,22 +33,53 @@ export async function signUp(formData: {
           full_name: formData.fullName,
           phone: formData.phone || null,
         },
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
       },
     });
 
     if (signUpError) {
-      throw signUpError;
+      // If user already exists, try to sign in
+      if (signUpError.message.includes('already registered')) {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+        
+        if (signInError) {
+          throw signInError;
+        }
+        
+        // Use the signed-in user data
+        user = signInData.user;
+        session = signInData.session;
+      } else {
+        throw signUpError;
+      }
+    } else if (signUpData?.user) {
+      // Use the signed-up user data
+      user = signUpData.user;
+      session = signUpData.session;
     }
 
-    if (!authData.user) {
-      throw new Error('User creation failed');
+    if (!user) {
+      throw new Error('User creation failed: No user data returned');
+    }
+    
+    // Ensure we have a valid session
+    if (!session) {
+      // Try to get the session
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        throw new Error('Failed to establish user session');
+      }
+      session = sessionData.session;
     }
     
     // 2. Create user profile in public.users
     const { error: userProfileError } = await supabase
       .from('users')
       .insert({
-        id: authData.user.id,
+        id: user.id,
         full_name: formData.fullName,
         email: formData.email,
         phone: formData.phone || null,
@@ -51,6 +88,12 @@ export async function signUp(formData: {
       
     if (userProfileError) {
       console.error('Error creating user profile:', userProfileError);
+      
+      // If we fail to create the user profile, try to delete the auth user
+      if (user?.id) {
+        await supabase.auth.admin.deleteUser(user.id);
+      }
+      
       throw new Error('Failed to create user profile');
     }
 
@@ -62,7 +105,7 @@ export async function signUp(formData: {
       .from('cities')
       .select('id')
       .eq('name', formData.city)
-      .eq('state', formData.state)
+      .eq('state_id', formData.stateId)
       .single();
     
     if (cityLookupError && cityLookupError.code !== 'PGRST116') { // PGRST116 = no rows found
@@ -74,12 +117,39 @@ export async function signUp(formData: {
       cityId = existingCity.id;
     } else {
       // City doesn't exist, create it
+      // First, get or create the state
+      const { data: existingState, error: stateLookupError } = await supabase
+        .from('states')
+        .select('id')
+        .eq('name', formData.state)
+        .single();
+        
+      let stateId = formData.stateId;
+      
+      if (!existingState && !stateId) {
+        // If state doesn't exist, you might want to handle this case
+        // For now, we'll just use the first state as a fallback
+        const { data: firstState } = await supabase
+          .from('states')
+          .select('id')
+          .limit(1)
+          .single();
+          
+        if (firstState) {
+          stateId = firstState.id;
+        } else {
+          throw new Error('No states available in the database');
+        }
+      } else if (existingState) {
+        stateId = existingState.id;
+      }
+      
       const { data: newCity, error: cityCreateError } = await supabase
         .from('cities')
         .insert({
           name: formData.city,
-          state: formData.state,
-          country: 'India'
+          state_id: stateId,
+          country_id: '1' // You might want to make this dynamic or configurable
         })
         .select('id')
         .single();
@@ -127,7 +197,7 @@ export async function signUp(formData: {
     const { error: userBusinessError } = await supabase
       .from('user_businesses')
       .insert({
-        user_id: authData.user.id,
+        user_id: user.id,
         business_id: businessData.id,
         role: 'owner',
       });
@@ -138,7 +208,7 @@ export async function signUp(formData: {
 
     return { 
       success: true, 
-      userId: authData.user.id,
+      userId: user.id,
       businessId: businessData.id 
     };
 
@@ -264,6 +334,150 @@ export async function logout() {
 }
 
 export async function getCurrentUser() {
+  const supabase = await createClient();
+  
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error || !user) {
+      return null;
+    }
+    
+    // Get additional user data from the public.users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+      
+    if (userError) {
+      console.error('Error fetching user data:', userError);
+      return null;
+    }
+    
+    // Merge all user data
+    return {
+      ...user,
+      user_metadata: {
+        ...user.user_metadata,
+        ...userData,
+      },
+    };
+  } catch (error) {
+    console.error('Error in getCurrentUser:', error);
+    return null;
+  }
+}
+
+export interface BusinessType {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getBusinessTypes(): Promise<BusinessType[]> {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('business_types')
+    .select('*')
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching business types:', error);
+    throw error;
+  }
+
+  return data as BusinessType[];
+}
+
+export async function getBusinessTypesAction(): Promise<BusinessType[]> {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('business_types')
+    .select('*')
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching business types:', error);
+    throw error;
+  }
+
+  return data as BusinessType[];
+}
+
+export interface State {
+  id: string;
+  name: string;
+  country_id: string;
+}
+
+export async function getStates(): Promise<State[]> {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('states')
+    .select('*')
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching states:', error);
+    throw error;
+  }
+
+  return data as State[];
+}
+
+export interface City {
+  id: string;
+  name: string;
+  state_id: string;
+}
+
+export async function getCitiesByState(stateId: string): Promise<City[]> {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('cities')
+    .select('*')
+    .eq('state_id', stateId)
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error(`Error fetching cities for state ${stateId}:`, error);
+    throw error;
+  }
+
+  return data as City[];
+}
+
+export async function addNewCity(name: string, stateId: string): Promise<City> {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('cities')
+    .insert([
+      { 
+        name,
+        state_id: stateId,
+        country_id: '1' // Default to India for now
+      }
+    ])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error adding new city:', error);
+    throw error;
+  }
+
+  return data as City;
+}
+
+export async function getCurrentUserAction() {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
   

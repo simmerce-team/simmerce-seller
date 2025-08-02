@@ -3,16 +3,37 @@
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 
+export async function checkDuplicateProduct(name: string, businessId: string, excludeId?: string) {
+  const supabase = await createClient();
+  
+  try {
+    let query = supabase
+      .from('products')
+      .select('id')
+      .eq('business_id', businessId)
+      .ilike('name', name.trim());
+    
+    if (excludeId) {
+      query = query.neq('id', excludeId);
+    }
+    
+    const { data, error } = await query.maybeSingle();
+    
+    if (error) throw error;
+    return !!data; // returns true if duplicate found
+  } catch (error) {
+    console.error('Error checking for duplicate product:', error);
+    throw error;
+  }
+}
+
 export type AddProductInput = {
   name: string;
   description: string;
   price: number;
-  compare_at_price?: number | null;
   unit: string;
   moq: number;
   stock_quantity: number;
-  sku?: string | null;
-  barcode?: string | null;
   is_active?: boolean;
   category_id?: string | null;
 };
@@ -69,85 +90,6 @@ export async function addProduct(productData: AddProductInput) {
     return { 
       data: null, 
       error: error instanceof Error ? error.message : 'Failed to add product' 
-    };
-  }
-}
-
-export async function uploadProductImage(productId: string, file: File) {
-  const supabase = await createClient();
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-  const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-
-  try {
-    if (!file) {
-      throw new Error('No image file provided');
-    }
-
-    // Validate file type
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      throw new Error('Invalid file type. Please upload a JPEG, PNG, or WebP image.');
-    }
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      throw new Error('Image size too large. Maximum size is 5MB.');
-    }
-
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${productId}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-    const filePath = `products/${productId}/${fileName}`;
-
-    // Upload the file to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('product-images')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
-    if (uploadError) {
-      console.error('Storage upload error:', uploadError);
-      throw new Error('Failed to upload image. Please try again.');
-    }
-
-    // Get the public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(filePath);
-
-    // Add the image to the product_images table
-    const { data: imageData, error: imageError } = await supabase
-      .from('product_images')
-      .insert([
-        {
-          product_id: productId,
-          image_url: publicUrl,
-          is_primary: true,
-        },
-      ])
-      .select()
-      .single();
-
-    if (imageError) {
-      console.error('Database error:', imageError);
-      // Attempt to clean up the uploaded file if database insert fails
-      await supabase.storage
-        .from('product-images')
-        .remove([filePath])
-        .catch(cleanupError => 
-          console.error('Failed to clean up uploaded file:', cleanupError)
-        );
-      
-      throw new Error('Failed to save image details. Please try again.');
-    }
-
-    return { data: imageData, error: null };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to upload product image';
-    console.error('Error in uploadProductImage:', error);
-    return { 
-      data: null, 
-      error: 'Failed to process image. Please try again.'
     };
   }
 }
