@@ -3,13 +3,13 @@
 import { login } from '@/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { PasswordInput } from '../shared/components/forms';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { PasswordInput } from '../shared/components/forms';
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -62,10 +62,6 @@ function LoginContent() {
       }
     });
   };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-  };
   
   const handleBack = () => {
     router.push('/auth');
@@ -75,14 +71,6 @@ function LoginContent() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <button
-            type="button"
-            onClick={handleBack}
-            className="absolute left-4 top-4 p-1 rounded-full hover:bg-gray-100"
-            aria-label="Back to email entry"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
           <CardTitle className="text-2xl font-bold">Enter your password</CardTitle>
           <CardDescription className="text-gray-500">
             Sign in to your account with {email}

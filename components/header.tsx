@@ -12,19 +12,38 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Images } from "@/utils/constant";
+import { Menu } from "lucide-react";
 import Link from "next/link";
 import { MegaMenu } from "./navigation/mega-menu";
 import UserDropdown from "./user-dropdown";
 
+// Types
+interface NavigationLink {
+  href: string;
+  label: string;
+  active?: boolean;
+}
+
 // Mobile navigation links
-const mobileNavigationLinks = [
+const mobileNavigationLinks: NavigationLink[] = [
   { href: "/dashboard", label: "Dashboard", active: true },
   { href: "/products", label: "Products" },
 ];
 
-export default function Header() {
+interface HeaderProps {
+  // Add any props here if needed in the future
+  // Example: user?: User;
+}
+
+/**
+ * Header component that renders the main navigation bar
+ * @component
+ * @example
+ * return <Header />
+ */
+const Header: React.FC<HeaderProps> = () => {
   return (
-    <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/60">
+    <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/60" role="banner">
       <header className="h-[70px] px-4 sm:px-6 lg:px-8">
         <div className="flex h-full items-center justify-between gap-6 max-w-7xl mx-auto">
           {/* Left side - Logo and Mobile Menu */}
@@ -36,37 +55,19 @@ export default function Header() {
                   className="group size-9 md:hidden hover:bg-slate-100"
                   variant="ghost"
                   size="icon"
+                  aria-label="Toggle navigation menu"
+                  aria-expanded={false}
+                  aria-controls="mobile-navigation"
                 >
-                  <svg
-                    className="pointer-events-none"
-                    width={16}
-                    height={16}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M4 12L20 12"
-                      className="origin-center -translate-y-[7px] transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.1)] group-aria-expanded:translate-x-0 group-aria-expanded:translate-y-0 group-aria-expanded:rotate-[315deg]"
-                    />
-                    <path
-                      d="M4 12H20"
-                      className="origin-center transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.8)] group-aria-expanded:rotate-45"
-                    />
-                    <path
-                      d="M4 12H20"
-                      className="origin-center translate-y-[7px] transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.1)] group-aria-expanded:translate-y-0 group-aria-expanded:rotate-[135deg]"
-                    />
-                  </svg>
+                  <Menu />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
+                id="mobile-navigation"
                 align="start"
                 className="w-48 p-2 md:hidden border-slate-200 shadow-lg"
+                role="navigation"
+                aria-label="Main navigation"
               >
                 <NavigationMenu className="max-w-none *:w-full">
                   <NavigationMenuList className="flex-col items-start gap-0 md:gap-2">
@@ -90,6 +91,7 @@ export default function Header() {
             <Link
               href="/dashboard"
               className="flex items-center gap-2 sm:gap-3 text-slate-800 hover:text-red-600 transition-colors group"
+              aria-label="Simmerce - Go to dashboard"
             >
               <img
                 src={Images.logo512}
@@ -123,4 +125,6 @@ export default function Header() {
       </header>
     </div>
   );
-}
+};
+
+export default Header;

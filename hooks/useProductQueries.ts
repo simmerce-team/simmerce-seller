@@ -1,10 +1,10 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getSellerProducts, toggleProductStatus, type Product } from '@/actions/products';
-import { getProductById, updateProduct, deleteProduct } from '@/actions/show-product';
-import { toast } from 'sonner';
+import { deleteProduct, getProductById, updateProduct } from '@/actions/show-product';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 const PRODUCTS_QUERY_KEY = 'seller-products';
 
@@ -133,7 +133,6 @@ export const useProduct = (productId: string, isClient: boolean = false) => {
 
 export const useUpdateProduct = () => {
   const queryClient = useQueryClient();
-  const router = useRouter();
   
   return useMutation({
     mutationFn: async (updatedProduct: Partial<Product> & { id: string }) => {

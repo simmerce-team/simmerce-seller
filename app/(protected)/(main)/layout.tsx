@@ -8,7 +8,14 @@ export default function RootLayout({
   return (
     <>
       <Header />
-      <main className="min-h-screen container mx-auto py-10">{children}</main>
+      <main 
+        id="main-content"
+        className="min-h-screen container mx-auto py-10"
+        role="main"
+        tabIndex={-1}
+      >
+        {children}
+      </main>
     </>
   );
 }

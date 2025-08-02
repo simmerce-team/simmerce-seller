@@ -1,10 +1,9 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
-import { ComponentProps } from 'react';
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
+import { ComponentProps, useState } from 'react';
 
 interface PasswordInputProps extends Omit<ComponentProps<typeof Input>, 'type' | 'onChange'> {
   showStrength?: boolean;
@@ -24,6 +23,7 @@ export function PasswordInput({
       <Input
         type={showPassword ? 'text' : 'password'}
         className={cn('pr-10', className)}
+        placeholder='*********'
         disabled={disabled}
         {...props}
       />

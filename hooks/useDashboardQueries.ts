@@ -1,7 +1,7 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import { getDashboardMetrics } from '@/actions/dashboard';
+import { useQuery } from '@tanstack/react-query';
 
 export function useDashboardMetrics() {
   return useQuery({

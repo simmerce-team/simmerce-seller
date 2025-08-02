@@ -2,45 +2,44 @@
 
 import { createClient } from "@/utils/supabase/server";
 
-export type DashboardMetrics = {
+type DashboardMetrics = {
   total_products: number;
   active_enquiries: number;
   open_buy_leads: number;
   conversion_rate: number;
 };
 
-export async function getDashboardMetrics(businessId: string): Promise<{
+export async function getDashboardMetrics(businessId?: string): Promise<{
   data: DashboardMetrics | null;
   error: string | null;
 }> {
   try {
     const supabase = await createClient();
     
-    // Get user's business ID if not provided
-    let business_id = businessId;
-    if (!business_id) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-      
-      // Get user's businesses
-      const { data: userBusiness, error: userBusinessError } = await supabase
+    // Get user and business ID
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      throw new Error('User not authenticated');
+    }
+
+    // If businessId is not provided, try to get it from user_businesses
+    let finalBusinessId = businessId;
+    if (!finalBusinessId) {
+      const { data: userBusiness, error: businessError } = await supabase
         .from('user_businesses')
         .select('business_id')
         .eq('user_id', user.id)
         .single();
         
-      if (userBusinessError || !userBusiness) {
+      if (businessError || !userBusiness) {
         throw new Error('No business found for user');
       }
-      
-      business_id = userBusiness.business_id;
+      finalBusinessId = userBusiness.business_id;
     }
 
-    // Use the database function to get all metrics in a single query
+    // Get dashboard metrics
     const { data: metrics, error: metricsError } = await supabase
-      .rpc('get_business_metrics', { p_business_id: business_id });
+      .rpc('get_business_metrics', { p_business_id: finalBusinessId });
 
     if (metricsError) throw metricsError;
     if (!metrics) throw new Error('No metrics data returned');

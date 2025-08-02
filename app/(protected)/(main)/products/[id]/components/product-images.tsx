@@ -1,5 +1,5 @@
-import { Images } from "@/utils/constant";
 import Image from "next/image";
+import { Images } from "@/utils/constant";
 
 type ProductImagesProps = {
   images: Array<{
@@ -8,7 +8,7 @@ type ProductImagesProps = {
     alt_text: string | null;
     is_primary: boolean;
   }>;
-    name: string;
+  name: string;
 };
 
 export function ProductImages({ images, name }: ProductImagesProps) {
