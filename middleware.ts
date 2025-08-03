@@ -1,5 +1,5 @@
 import { updateSession } from '@/utils/supabase/middleware';
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest } from 'next/server';
 
 // Define the security headers
 const securityHeaders = {
@@ -10,9 +10,20 @@ const securityHeaders = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  'Content-Security-Policy': [
+};
+
+export async function middleware(request: NextRequest) {
+  // Create nonce first so it's available for the CSP
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+  
+  // Update the session
+  const response = await updateSession(request);
+  
+  // Generate the security headers with the nonce
+  const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:",
+    `script-src 'self' 'strict-dynamic' 'nonce-${nonce}' 'unsafe-eval' https: http:`,
+    "script-src-attr 'none'",
     "style-src 'self' 'unsafe-inline' https: http:",
     "img-src 'self' data: blob: https: http:",
     "font-src 'self' https: http: data:",
@@ -24,28 +35,14 @@ const securityHeaders = {
     "frame-ancestors 'none'",
     "block-all-mixed-content",
     "upgrade-insecure-requests"
-  ].join('; ')
-};
-
-export async function middleware(request: NextRequest) {
-  // Update the session first
-  const response = await updateSession(request);
+  ].join('; ');
   
   // Add security headers to all responses
   Object.entries(securityHeaders).forEach(([key, value]) => {
     response.headers.set(key, value);
   });
-
-  // Add nonce to CSP for inline scripts if needed
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
-  const cspHeader = response.headers.get('content-security-policy') || '';
   
-  // Update CSP with nonce for scripts
-  response.headers.set(
-    'Content-Security-Policy',
-    cspHeader
-      .replace(/script-src[^;]*/, `script-src 'self' 'nonce-${nonce}' 'unsafe-inline' 'unsafe-eval' https: http:`)
-  );
+  response.headers.set('Content-Security-Policy', csp);
 
   return response;
 }
