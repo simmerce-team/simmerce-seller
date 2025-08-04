@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardMetrics } from "@/hooks/useDashboardQueries";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   Box,
   MessageSquare,
@@ -27,7 +26,7 @@ const MetricCard = ({
   isLoading,
 }: MetricCardProps) => (
   <Card className="flex-1 min-w-[200px]">
-    <CardContent className="p-6">
+    <CardContent className="px-6">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
@@ -46,7 +45,6 @@ const MetricCard = ({
 );
 
 export function DashboardStats() {
-  const queryClient = useQueryClient();
   const {
     data: metricsData,
     isLoading,
@@ -55,9 +53,6 @@ export function DashboardStats() {
     refetch,
   } = useDashboardMetrics();
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
-  };
 
   if (isError) {
     return (

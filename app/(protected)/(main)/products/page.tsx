@@ -47,7 +47,7 @@ export default function ProductsPage() {
 
   if (error) {
     return (
-      <div className="flex-1 p-6">
+      <div className="flex-1">
         <div className="flex flex-col items-center justify-center gap-4 p-6 text-center">
           <div className="flex items-center gap-2 text-destructive">
             <AlertCircle className="h-5 w-5" />
@@ -67,7 +67,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="space-y-6 px-6">
+    <div className="space-y-6">
       <Card>
         <CardHeader className="pb-0 block md:flex md:items-center md:justify-between space-y-2 md:space-y-0">
           <div className="space-y-2">

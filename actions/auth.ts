@@ -32,6 +32,7 @@ export async function signUp(formData: {
         data: {
           full_name: formData.fullName,
           phone: formData.phone || null,
+          business_name: formData.businessName,
         },
         emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
       },

@@ -4,7 +4,7 @@ import { checkDuplicateProduct } from "@/actions/add-product";
 import { uploadProductImage } from "@/actions/file-upload";
 import { getCategories } from "@/actions/get-categories";
 import { updateProduct } from "@/actions/show-product";
-import { ProductForm } from "@/components/forms/product-form";
+import { ProductForm } from "@/components/product/product-form";
 import { Button } from '@/components/ui/button';
 import { useProduct } from "@/hooks/useProductQueries";
 import { createClient } from "@/utils/supabase/client";
@@ -83,6 +83,7 @@ export default function EditProductPage({
   };
 
   const handleSubmit = async (formData: any) => {
+    setIsPending(true);
     // Validate required fields
     if (!formData.name || !formData.price || !formData.unit) {
       toast.error("Please fill in all required fields");
@@ -164,6 +165,7 @@ export default function EditProductPage({
           console.log('Image was removed');
         }
 
+        setIsPending(false);
         toast.success('Product updated successfully!');
         router.push(`/products/${paramsData.id}`);
       } catch (error) {
@@ -183,7 +185,7 @@ export default function EditProductPage({
 
   if (!product) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Product Not Found</h1>
           <p className="text-muted-foreground">The requested product could not be found.</p>
@@ -199,7 +201,7 @@ export default function EditProductPage({
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Edit Product</h1>
         <p className="text-muted-foreground">Update your product details</p>

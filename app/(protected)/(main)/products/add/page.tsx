@@ -3,7 +3,7 @@
 import { addProduct, checkDuplicateProduct } from '@/actions/add-product';
 import { uploadProductImage } from '@/actions/file-upload';
 import { getCategories } from '@/actions/get-categories';
-import { ProductForm } from '@/components/forms/product-form';
+import { ProductForm } from '@/components/product/product-form';
 import { createClient } from '@/utils/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -141,7 +141,7 @@ export default function AddProductPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Add New Product</h1>
         <p className="text-muted-foreground">Add a new product to your inventory</p>

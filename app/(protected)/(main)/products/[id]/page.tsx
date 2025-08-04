@@ -1,16 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { deleteProduct, getProductById } from "../../../../../actions/show-product";
+import { getProductById } from "../../../../../actions/show-product";
 import { Product } from "./types";
 
 // Components
-import { ProductDescription } from "./components/product-description";
 import { ProductHeader } from "./components/product-header";
 import { ProductImages } from "./components/product-images";
 import { ProductInfo } from "./components/product-info";
@@ -62,21 +61,6 @@ export default function ProductDetailPage({ params }: { params: Params }) {
     }
   }, [productId]);
 
-  const handleDelete = async () => {
-    if (!product) return;
-    
-    if (confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
-      const { success, error } = await deleteProduct(product.id);
-      
-      if (success) {
-        toast.success("Product deleted successfully");
-        router.push("/products");
-      } else {
-        toast.error(error || "Failed to delete product");
-      }
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -87,7 +71,7 @@ export default function ProductDetailPage({ params }: { params: Params }) {
 
   if (error || !product) {
     return (
-      <div className="text-center py-12 px-6">
+      <div className="text-center">
         <h2 className="text-xl font-semibold mb-2">Product Not Found</h2>
         <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or has been removed.</p>
         <Button 
@@ -103,7 +87,7 @@ export default function ProductDetailPage({ params }: { params: Params }) {
   }
 
   return (
-    <div className="space-y-6 px-6">
+    <div className="space-y-6">
       <ProductHeader 
         product={{
           id: product.id,
@@ -120,7 +104,7 @@ export default function ProductDetailPage({ params }: { params: Params }) {
         <div className="md:col-span-3 space-y-6">
           {/* Product Images and Basic Info */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="md:p-6">
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-4">
                   <ProductImages 
@@ -144,9 +128,13 @@ export default function ProductDetailPage({ params }: { params: Params }) {
           {/* Product Description */}
           {product.description && (
             <Card>
-              <CardContent className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Description</h2>
-                <ProductDescription description={product.description || ''} />
+              <CardHeader>
+                <CardTitle>Description</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="prose max-w-none text-muted-foreground">
+                  {product.description}
+                </div>
               </CardContent>
             </Card>
           )}

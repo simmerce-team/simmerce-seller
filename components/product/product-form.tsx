@@ -83,7 +83,7 @@ export function ProductForm({
     }));
   };
 
-  const handleSwitchChange = (name: 'is_active' | 'is_featured', checked: boolean) => {
+  const handleSwitchChange = (name: 'is_active', checked: boolean) => {
     setFormData(prev => ({
       ...prev,
       [name]: checked
@@ -95,8 +95,8 @@ export function ProductForm({
       const file = e.target.files[0];
       
       // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size should be less than 5MB');
+      if (file.size > 1 * 1024 * 1024) {
+        toast.error('Image size should be less than 1MB');
         return;
       }
 
@@ -118,7 +118,7 @@ export function ProductForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-     <div className="flex gap-2">
+     <div className="md:flex gap-2 space-y-2">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Product Information</CardTitle>
@@ -269,7 +269,7 @@ export function ProductForm({
                   <p className="mb-2 text-sm text-gray-500">
                     <span className="font-semibold">Click to upload</span> or drag and drop
                   </p>
-                  <p className="text-xs text-gray-500">PNG, JPG, JPEG (MAX. 5MB)</p>
+                  <p className="text-xs text-gray-500">PNG, JPG, JPEG (MAX. 1MB)</p>
                 </div>
               )}
               <input
@@ -285,7 +285,7 @@ export function ProductForm({
       </Card>
       </div>
 
-      <div className="flex justify-end space-x-4">
+      <div className="flex gap-3 pt-2 justify-end">
         <Button
           type="button"
           variant="outline"
@@ -294,9 +294,16 @@ export function ProductForm({
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={isPending}>
-          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isEdit ? 'Update Product' : 'Add Product'}
+        <Button 
+          type="submit" 
+          disabled={isPending}
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {isEdit ? 'Updating...' : 'Adding...'}
+            </>
+          ) : isEdit ? 'Update Product' : 'Add Product'}
         </Button>
       </div>
     </form>

@@ -15,8 +15,8 @@ export function ProductSidebar({
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg">Product Status</CardTitle>
+        <CardHeader>
+          <CardTitle>Product Status</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">

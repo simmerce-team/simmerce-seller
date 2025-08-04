@@ -1,9 +1,8 @@
 import { Toaster } from "@/components/ui/sonner";
+import { defaultMetadata, viewportConfig } from "@/config/metadata";
 import { AuthProvider } from "@/contexts/auth-context";
 import { QueryProvider } from "@/providers/query-provider";
-import { defaultMetadata, viewportConfig } from "@/config/metadata";
 import { Inter } from "next/font/google";
-import Link from "next/link";
 import "./globals.css";
 
 export const viewport = viewportConfig;
@@ -18,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
       <body className={`${inter.className} relative`}>
         {/* Skip to main content link for keyboard users */}
         <a
