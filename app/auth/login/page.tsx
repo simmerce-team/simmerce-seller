@@ -68,12 +68,12 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Enter your password</CardTitle>
-          <CardDescription className="text-gray-500">
-            Sign in to your account with {email}
+    <div className="flex flex-col gap-6">
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle className="text-xl">Enter your password</CardTitle>
+          <CardDescription>
+            Sign in to your account with <p className="font-medium text-primary">{email}</p>
           </CardDescription>
         </CardHeader>
         
@@ -81,7 +81,15 @@ function LoginContent() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link
+                    href={`/auth/forgot-password?email=${encodeURIComponent(email)}`}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <PasswordInput
                   id="password"
                   value={password}
@@ -90,17 +98,13 @@ function LoginContent() {
                   required
                 />
               </div>
-              <Link
-                href={`/auth/forgot-password?email=${encodeURIComponent(email)}`}
-                className="text-sm text-primary hover:underline"
-              >
-                Forgot password?
-              </Link>
+           
             </div>
             
             <Button 
               type="submit"
               disabled={isPending || isSubmitting}
+              className="w-full"
             >
               {(isPending || isSubmitting) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

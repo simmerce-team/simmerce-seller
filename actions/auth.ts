@@ -455,7 +455,7 @@ export async function getCitiesByState(stateId: string): Promise<City[]> {
   return data as City[];
 }
 
-export async function addNewCity(name: string, stateId: string): Promise<City> {
+export async function addNewCity(name: string, stateId: string, countryId: string): Promise<City> {
   const supabase = await createClient();
   
   const { data, error } = await supabase
@@ -464,7 +464,7 @@ export async function addNewCity(name: string, stateId: string): Promise<City> {
       { 
         name,
         state_id: stateId,
-        country_id: '1' // Default to India for now
+        country_id: countryId 
       }
     ])
     .select()

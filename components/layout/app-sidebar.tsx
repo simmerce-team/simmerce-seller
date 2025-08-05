@@ -1,8 +1,10 @@
 "use client"
 
 import {
-  Box,
-  Home
+  LayoutGrid,
+  Magnet,
+  MessageCircle,
+  ShoppingBag
 } from "lucide-react"
 import * as React from "react"
 
@@ -22,14 +24,14 @@ import { useAuth } from "@/contexts/auth-context"
 const 
   navMain = [
     {
-      title: "Dashbaord",
+      title: "Dashboard",
       url: "/dashboard",
-      icon: Home,
+      icon: LayoutGrid,
     },
     {
       title: "Products",
       url: "/products",
-      icon: Box,
+      icon: ShoppingBag,
       items: [
         {
           title: "Add Product",
@@ -40,6 +42,16 @@ const
           url: "/products",
         },
       ],
+    },
+    {
+      title: "Leads",
+      url: "/leads",
+      icon: Magnet,
+    },
+    {
+      title: "Enquiries",
+      url: "/enquiries",
+      icon: MessageCircle,
     },
   ];
 

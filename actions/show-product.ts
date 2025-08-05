@@ -1,7 +1,7 @@
 'use server';
 
+import { Product } from '@/app/(main)/products/[id]/types';
 import { createClient } from '@/utils/supabase/server';
-import { Product } from '../app/(protected)/(main)/products/[id]/types';
 
 
 export async function getProductById(id: string): Promise<{ data: Product | null; error: string | null }> {

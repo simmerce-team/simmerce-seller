@@ -34,9 +34,6 @@ export function BusinessInfoStep({
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Business Information</h3>
-      <p className="text-sm text-muted-foreground">
-        Tell us about your business
-      </p>
 
       <div className="space-y-2">
         <Label htmlFor="businessName">Business Name</Label>

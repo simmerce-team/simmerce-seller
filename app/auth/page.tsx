@@ -39,11 +39,11 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Welcome to Simmerce</CardTitle>
-          <CardDescription className="text-gray-500">
+    <div className="flex flex-col gap-6">
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle className="text-xl">Welcome to Simmerce</CardTitle>
+          <CardDescription>
             Enter your email to get started
           </CardDescription>
         </CardHeader>

@@ -21,7 +21,7 @@ export function useDashboardMetrics() {
         totalProducts: data.total_products || 0,
         activeEnquiries: data.active_enquiries || 0,
         openBuyLeads: data.open_buy_leads || 0,
-        conversionRate: data.conversion_rate || 0,
+        totalViews: data.total_views || 0,
       };
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

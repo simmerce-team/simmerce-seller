@@ -6,7 +6,6 @@ interface AccountInfoStepProps {
   formData: {
     fullName: string;
     password: string;
-    confirmPassword: string;
     phone: string;
   };
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -23,9 +22,6 @@ export function AccountInfoStep({
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Account Information</h3>
-      <p className="text-sm text-muted-foreground">
-        Create your account to get started
-      </p>
       
       <div className="space-y-2">
         <Label htmlFor="fullName">Full Name</Label>
@@ -69,20 +65,6 @@ export function AccountInfoStep({
         <p className="text-xs text-muted-foreground">
           Must be at least 8 characters
         </p>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
-        <PasswordInput
-          id="confirmPassword"
-          name="confirmPassword"
-          placeholder="••••••••"
-          autoComplete="new-password"
-          disabled={isPending || isSubmitting}
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          required
-        />
       </div>
     </div>
   );

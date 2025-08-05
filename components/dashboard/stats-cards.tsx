@@ -6,10 +6,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardMetrics } from "@/hooks/useDashboardQueries";
 import {
   Box,
+  Eye,
   MessageSquare,
   RefreshCw,
-  Search,
-  TrendingUp,
+  Search
 } from "lucide-react";
 
 type MetricCardProps = {
@@ -95,13 +95,9 @@ export function DashboardStats() {
         isLoading={isLoading}
       />
       <MetricCard
-        title="Conversion Rate"
-        value={
-          isLoading
-            ? "--%"
-            : `${(metricsData?.conversionRate || 0).toFixed(1)}%`
-        }
-        icon={TrendingUp}
+        title="Total Views"
+        value={isLoading ? "--" : metricsData?.totalViews || 0}
+        icon={Eye}
         isLoading={isLoading}
       />
     </div>

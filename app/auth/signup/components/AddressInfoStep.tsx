@@ -1,23 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { City, State } from '@/actions/auth';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Loader2, Plus } from 'lucide-react';
-
-interface State {
-  id: string;
-  name: string;
-}
-
-interface City {
-  id: string;
-  name: string;
-  state_id: string;
-}
+import { useEffect, useState } from 'react';
 
 interface AddressInfoStepProps {
   formData: {
@@ -41,6 +31,7 @@ export function AddressInfoStep({
   isSubmitting,
   isPending,
 }: AddressInfoStepProps) {
+  const [countryId, setCountryId] = useState('1');
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [isLoadingStates, setIsLoadingStates] = useState(true);
@@ -97,6 +88,8 @@ export function AddressInfoStep({
       // Reset city when state changes
       handleSelectChange('city', '');
       handleSelectChange('cityId', '');
+
+      setCountryId(selectedState.country_id);
     }
   };
 
@@ -114,7 +107,7 @@ export function AddressInfoStep({
     setIsAddingCity(true);
     try {
       const { addNewCity } = await import('@/actions/auth');
-      const addedCity = await addNewCity(newCity.trim(), formData.stateId);
+      const addedCity = await addNewCity(newCity.trim(), formData.stateId, countryId);
       
       // Update cities list
       setCities(prev => [...prev, addedCity]);
@@ -136,9 +129,6 @@ export function AddressInfoStep({
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Business Address</h3>
-      <p className="text-sm text-muted-foreground">
-        Where is your business located?
-      </p>
 
       <div className="space-y-2">
         <Label htmlFor="address">Street Address</Label>

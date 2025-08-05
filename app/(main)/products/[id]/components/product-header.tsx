@@ -1,10 +1,10 @@
+import { deleteProduct } from "@/actions/show-product";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ArrowLeft, Edit, Link as LinkIcon, MoreHorizontal, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { deleteProduct } from "../../../../../../actions/show-product";
 
 type ProductHeaderProps = {
   product: {

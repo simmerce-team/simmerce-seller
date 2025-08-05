@@ -23,7 +23,7 @@ import {
 } from "@/hooks/useProductQueries";
 import { Images } from "@/utils/constant";
 import { formatPrice, StockStatusBadge } from "@/utils/helpers";
-import { AlertCircle, Loader2, Plus } from "lucide-react";
+import { AlertCircle, Edit, Eye, Loader2, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -171,6 +171,7 @@ export default function ProductsPage() {
                   <TableHead className="px-4 text-right">Price</TableHead>
                   <TableHead className="px-4 text-right">Stock</TableHead>
                   <TableHead className="px-4">Status</TableHead>
+                  <TableHead className="px-4">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -227,6 +228,24 @@ export default function ProductsPage() {
                           stock={product.stock_quantity}
                           isActive={product.is_active}
                         />
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/products/${product.id}`}
+                          >
+                            <Button variant="default" size="icon">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Link
+                            href={`/products/${product.id}/edit`}
+                          >
+                            <Button variant="secondary" size="icon">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

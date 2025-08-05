@@ -162,7 +162,7 @@ export default function EditProductPage({
         } else if (isImageChanged && !selectedImage) {
           // Handle case where image was removed
           // You might want to implement image deletion logic here if needed
-          console.log('Image was removed');
+          toast.error('Image was removed');
         }
 
         setIsPending(false);
@@ -203,8 +203,8 @@ export default function EditProductPage({
   return (
     <div className="container mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Edit Product</h1>
-        <p className="text-muted-foreground">Update your product details</p>
+        <h1 className="md:text-2xl font-bold">Edit Product</h1>
+        <p className="text-sm text-muted-foreground">Update your product details</p>
       </div>
       
       <ProductForm

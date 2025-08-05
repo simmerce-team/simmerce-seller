@@ -143,8 +143,8 @@ export default function AddProductPage() {
   return (
     <div className="container mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Add New Product</h1>
-        <p className="text-muted-foreground">Add a new product to your inventory</p>
+        <h1 className="md:text-2xl font-bold">Add New Product</h1>
+        <p className="text-sm text-muted-foreground">Add a new product to your inventory</p>
       </div>
       
       <ProductForm

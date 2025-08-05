@@ -6,7 +6,7 @@ type DashboardMetrics = {
   total_products: number;
   active_enquiries: number;
   open_buy_leads: number;
-  conversion_rate: number;
+  total_views: number;
 };
 
 export async function getDashboardMetrics(businessId?: string): Promise<{
@@ -49,7 +49,7 @@ export async function getDashboardMetrics(businessId?: string): Promise<{
         total_products: Number(metrics.total_products) || 0,
         active_enquiries: Number(metrics.active_enquiries) || 0,
         open_buy_leads: Number(metrics.open_buy_leads) || 0,
-        conversion_rate: Number(metrics.conversion_rate) || 0,
+        total_views: Number(metrics.total_views) || 0,
       },
       error: null,
     };

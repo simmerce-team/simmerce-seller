@@ -6,10 +6,10 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { getProductById } from "../../../../../actions/show-product";
 import { Product } from "./types";
 
 // Components
+import { getProductById } from "@/actions/show-product";
 import { ProductHeader } from "./components/product-header";
 import { ProductImages } from "./components/product-images";
 import { ProductInfo } from "./components/product-info";
@@ -46,7 +46,6 @@ export default function ProductDetailPage({ params }: { params: Params }) {
         setError(message);
         toast.error(message);
       } finally {
-        console.log('Finished loading, setting loading to false');
         setLoading(false);
       }
     };
@@ -104,21 +103,22 @@ export default function ProductDetailPage({ params }: { params: Params }) {
         <div className="md:col-span-3 space-y-6">
           {/* Product Images and Basic Info */}
           <Card>
-            <CardContent className="md:p-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-4">
+            <CardContent>
+              <div className="grid gap-6 md:grid-cols-3">
+                <div className="md:col-span-1">
                   <ProductImages 
                     images={product.images || []} 
                     name={product.name} 
                   />
                 </div>
-                <div className="space-y-6">
+                <div className="md:col-span-2">
                   <ProductInfo
                     name={product.name}
                     price={Number(product.price)}
                     stockQuantity={product.stock_quantity || 0}
                     category={product.category?.name}
                     moq={product.moq}
+                    unit={product.unit}
                   />
                 </div>
               </div>
@@ -126,18 +126,16 @@ export default function ProductDetailPage({ params }: { params: Params }) {
           </Card>
 
           {/* Product Description */}
-          {product.description && (
             <Card>
               <CardHeader>
                 <CardTitle>Description</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="prose max-w-none text-muted-foreground">
-                  {product.description}
+                  {product.description || "No description available"}
                 </div>
               </CardContent>
             </Card>
-          )}
         </div>
 
         {/* Sidebar */}
