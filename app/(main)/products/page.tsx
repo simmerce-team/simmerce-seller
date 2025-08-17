@@ -124,14 +124,6 @@ export default function ProductsPage() {
                       <div className="text-muted-foreground">Price</div>
                       <div>
                         <div>{formatPrice(product.price, product.unit)}</div>
-                        {product.compare_at_price && (
-                          <div className="text-xs text-muted-foreground line-through">
-                            {formatPrice(
-                              product.compare_at_price,
-                              product.unit
-                            )}
-                          </div>
-                        )}
                       </div>
                     </div>
                     <div className="space-y-1">
@@ -203,14 +195,6 @@ export default function ProductsPage() {
                           <span className="whitespace-nowrap">
                             {formatPrice(product.price, product.unit)}
                           </span>
-                          {product.compare_at_price && (
-                            <span className="text-xs text-muted-foreground line-through">
-                              {formatPrice(
-                                product.compare_at_price,
-                                product.unit
-                              )}
-                            </span>
-                          )}
                         </div>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-right">

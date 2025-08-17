@@ -81,7 +81,6 @@ const filterProducts = (products: Product[], searchTerm: string, statusFilter: s
   return products.filter(product => {
     const matchesSearch = 
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = 

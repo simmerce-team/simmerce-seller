@@ -2,19 +2,23 @@
 
 import { createClient } from '@/utils/supabase/server';
 
+export interface ProductFile {
+  id: string;
+  url: string;
+  file_type: string;
+  is_primary: boolean;
+}
+
+
 export interface Product {
   id: string;
   name: string;
   description: any; // JSONB field
   price: number;
-  compare_at_price: number | null;
   unit: string;
   moq: number;
   stock_quantity: number;
-  sku: string | null;
-  barcode: string | null;
   is_active: boolean;
-  is_featured: boolean;
   view_count: number;
   enquiry_count: number;
   created_at: string;
@@ -49,7 +53,7 @@ export async function getSellerProducts() {
       .from('products')
       .select(`
         *,
-        product_images!left (
+        product_files!left (
           url
         )
       `)
@@ -63,7 +67,7 @@ export async function getSellerProducts() {
     // Process products to include primary image
     const processedProducts = products.map(product => ({
       ...product,
-      primary_image: product.product_images?.[0]?.url || null
+      primary_image: product.product_files?.[0]?.url || null
     }));
 
     return { 

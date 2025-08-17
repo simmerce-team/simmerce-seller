@@ -1,5 +1,6 @@
 'use server';
 
+import { getUniqueSlug } from '@/actions/slugify';
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 
@@ -36,6 +37,7 @@ export type AddProductInput = {
   stock_quantity: number;
   is_active?: boolean;
   category_id?: string | null;
+  youtube_url?: string | null;
 };
 
 export async function addProduct(productData: AddProductInput) {
@@ -66,6 +68,7 @@ export async function addProduct(productData: AddProductInput) {
     const productToInsert = {
       ...productData,
       business_id: userBusiness.business_id,
+      slug: await getUniqueSlug('products', productData.name),
       is_active: productData.is_active ?? true,
       view_count: 0,
       enquiry_count: 0,

@@ -1,5 +1,6 @@
 'use server';
 
+import { getUniqueSlug } from '@/actions/slugify';
 import { createClient } from '@/utils/supabase/server';
 
 export async function signUp(formData: {
@@ -84,6 +85,7 @@ export async function signUp(formData: {
         full_name: formData.fullName,
         email: formData.email,
         phone: formData.phone || null,
+        role: 'seller',
         created_at: new Date().toISOString()
       });
       
@@ -180,12 +182,13 @@ export async function signUp(formData: {
       .from('businesses')
       .insert({
         name: formData.businessName,
+        slug: await getUniqueSlug('businesses', formData.businessName),
+        description: 'N/A',
         business_type_id: formData.businessTypeId,
         gst_number: formData.gstNumber || null,
         address: formData.address,
-        city_id: cityId,
         pincode: formData.pincode,
-        is_verified: false,
+        city_id: cityId,
       })
       .select('id')
       .single();
@@ -464,7 +467,8 @@ export async function addNewCity(name: string, stateId: string, countryId: strin
       { 
         name,
         state_id: stateId,
-        country_id: countryId 
+        country_id: countryId,
+        slug: await getUniqueSlug('cities', name),
       }
     ])
     .select()

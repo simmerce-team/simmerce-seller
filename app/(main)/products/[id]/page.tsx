@@ -6,43 +6,42 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Product } from "./types";
 
 // Components
-import { getProductById } from "@/actions/show-product";
+import { getProductById, Product } from "@/actions/show-product";
 import { ProductHeader } from "./components/product-header";
-import { ProductImages } from "./components/product-images";
+import { ImageArea } from "./components/product-images";
 import { ProductInfo } from "./components/product-info";
 import { ProductSidebar } from "./components/product-sidebar";
 
-type Params = Promise<{ id: string }>
+type Params = Promise<{ id: string }>;
 
 export default function ProductDetailPage({ params }: { params: Params }) {
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  const { id: productId } = use(params);
 
+  const { id: productId } = use(params);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
         const { data, error } = await getProductById(productId);
-        
+
         if (error) {
-          console.error('Error fetching product:', error);
+          console.error("Error fetching product:", error);
           setError(error);
           toast.error(error);
           return;
         }
-        
+
         setProduct(data);
       } catch (err) {
-        console.error('Caught error in fetchProduct:', err);
-        const message = err instanceof Error ? err.message : 'Failed to fetch product';
+        console.error("Caught error in fetchProduct:", err);
+        const message =
+          err instanceof Error ? err.message : "Failed to fetch product";
         setError(message);
         toast.error(message);
       } finally {
@@ -51,11 +50,11 @@ export default function ProductDetailPage({ params }: { params: Params }) {
     };
 
     if (productId) {
-      fetchProduct().catch(err => {
-        console.error('Unhandled error in fetchProduct:', err);
+      fetchProduct().catch((err) => {
+        console.error("Unhandled error in fetchProduct:", err);
       });
     } else {
-      setError('No product ID provided');
+      setError("No product ID provided");
       setLoading(false);
     }
   }, [productId]);
@@ -72,10 +71,12 @@ export default function ProductDetailPage({ params }: { params: Params }) {
     return (
       <div className="text-center">
         <h2 className="text-xl font-semibold mb-2">Product Not Found</h2>
-        <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or has been removed.</p>
-        <Button 
-          variant="outline" 
-          onClick={() => router.back()}
+        <p className="text-muted-foreground mb-6">
+          The product you're looking for doesn't exist or has been removed.
+        </p>
+        <Button
+          variant="outline"
+          onClick={() => router.push("/products")}
           className="gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -87,14 +88,11 @@ export default function ProductDetailPage({ params }: { params: Params }) {
 
   return (
     <div className="space-y-6">
-      <ProductHeader 
+      <ProductHeader
         product={{
           id: product.id,
           name: product.name,
-          status: product.is_active ? 'active' : 'draft',
-          sku: product.sku || 'N/A',
-          updated_at: product.updated_at,
-          view_count: product.view_count || 0
+          status: product.is_active ? "active" : "draft",
         }}
       />
 
@@ -102,16 +100,13 @@ export default function ProductDetailPage({ params }: { params: Params }) {
         {/* Main Content */}
         <div className="md:col-span-3 space-y-6">
           {/* Product Images and Basic Info */}
-          <Card>
-            <CardContent>
-              <div className="grid gap-6 md:grid-cols-3">
-                <div className="md:col-span-1">
-                  <ProductImages 
-                    images={product.images || []} 
-                    name={product.name} 
-                  />
-                </div>
-                <div className="md:col-span-2">
+          <div className="grid gap-4 md:grid-cols-5">
+            <div className="md:col-span-2">
+              <ImageArea product={product} />
+            </div>
+            <div className="md:col-span-3">
+              <Card>
+                <CardContent>
                   <ProductInfo
                     name={product.name}
                     price={Number(product.price)}
@@ -120,30 +115,51 @@ export default function ProductDetailPage({ params }: { params: Params }) {
                     moq={product.moq}
                     unit={product.unit}
                   />
-                </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Product Description */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Description</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="prose max-w-none text-slate-700">
+                {product.description ? (
+                  typeof product.description === "string" ? (
+                    <div
+                      className="prose prose-slate max-w-none"
+                      dangerouslySetInnerHTML={{ __html: product.description }}
+                    />
+                  ) : (
+                    <div className="space-y-2">
+                      {Object.entries(product.description).map(
+                        ([key, value]) => (
+                          <div key={key} className="flex gap-2">
+                            <span className="font-medium">{key}:</span>
+                            <span>{String(value)}</span>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )
+                ) : (
+                  <p className="text-slate-500 italic">
+                    No description available for this product.
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
-
-          {/* Product Description */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Description</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="prose max-w-none text-muted-foreground">
-                  {product.description || "No description available"}
-                </div>
-              </CardContent>
-            </Card>
         </div>
 
         {/* Sidebar */}
         <div className="md:col-span-1">
-          <ProductSidebar 
-            status={product.is_active ? 'active' : 'draft'}
+          <ProductSidebar
+            status={product.is_active ? "active" : "draft"}
             createdAt={product.created_at}
-            updatedAt={product.updated_at}
           />
         </div>
       </div>

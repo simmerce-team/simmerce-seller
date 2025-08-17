@@ -2,147 +2,288 @@
 
 import { createClient } from '@/utils/supabase/server';
 
-type ProductImage = {
+type FileType = 'image' | 'pdf';
+
+type ProductFile = {
   id: string;
   product_id: string;
   url: string;
+  file_type: FileType;
   is_primary: boolean;
   created_at?: string;
   updated_at?: string;
 };
 
 type UploadResult = {
-  data: ProductImage | null;
+  data: ProductFile | ProductFile[] | null;
   error: string | null;
 };
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_PDF_SIZE = 1 * 1024 * 1024; // 1MB
+const MAX_IMAGES = 3;
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+const ALLOWED_PDF_TYPE = 'application/pdf';
 
 /**
- * Uploads a product image to storage and associates it with a product
- * @param productId - The ID of the product to associate the image with
- * @param file - The image file to upload
+ * Uploads a product file (image or PDF) to storage and associates it with a product
+ * @param productId - The ID of the product to associate the file with
+ * @param file - The file to upload
+ * @param fileType - The type of file ('image' or 'pdf')
  * @param options - Optional configuration
+ * @param options.isPrimary - Whether this file should be marked as primary
  * @param options.isUpdate - Whether this is an update to an existing product
- * @returns The uploaded image data or an error
+ * @returns The uploaded file data or an error
  */
-export async function uploadProductImage(
-  productId: string, 
+export async function uploadProductFile(
+  productId: string,
   file: File,
-  options: { isUpdate?: boolean } = {}
+  fileType: FileType,
+  options: { isPrimary?: boolean; isUpdate?: boolean } = {}
 ): Promise<UploadResult> {
   const supabase = await createClient();
-  const { isUpdate = false } = options;
+  const { isPrimary = false, isUpdate = false } = options;
 
   try {
     // Validate input
     if (!file) {
-      throw new Error('No image file provided');
+      throw new Error('No file provided');
     }
 
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      throw new Error('Invalid file type. Please upload a JPEG, PNG, or WebP image.');
+    if (fileType === 'image' && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      throw new Error('Invalid image type. Please upload a JPEG, PNG, or WebP image.');
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      throw new Error(`Image size too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB.`);
+    if (fileType === 'pdf' && file.type !== ALLOWED_PDF_TYPE) {
+      throw new Error('Invalid file type. Please upload a PDF file.');
     }
 
-    // Check for existing images if this is an update
-    let existingImage: { id: string; url?: string } | null = null;
-    
-    if (isUpdate) {
-      const { data: existingImageData, error: fetchError } = await supabase
-        .from('product_images')
-        .select('id, url')
+    const maxSize = fileType === 'pdf' ? MAX_PDF_SIZE : MAX_IMAGE_SIZE;
+    if (file.size > maxSize) {
+      const maxSizeMB = maxSize / (1024 * 1024);
+      throw new Error(`${fileType.toUpperCase()} size too large. Maximum size is ${maxSizeMB}MB.`);
+    }
+
+    // Check if we've reached the maximum number of images
+    if (fileType === 'image') {
+      const { data: existingImages, error: countError } = await supabase
+        .from('product_files')
+        .select('id', { count: 'exact' })
         .eq('product_id', productId)
-        .maybeSingle();
+        .eq('file_type', 'image');
 
-      if (fetchError) {
-        console.error('Error fetching existing images:', fetchError);
-        throw new Error('Failed to check for existing product images');
+      if (countError) throw countError;
+      
+      if ((existingImages?.length || 0) >= MAX_IMAGES) {
+        throw new Error(`Maximum of ${MAX_IMAGES} images allowed per product.`);
       }
-      existingImage = existingImageData;
     }
 
-    // Generate unique filename and path
-    const fileExt = file.name.split('.').pop()?.toLowerCase();
-    const fileName = `${productId}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-    const filePath = `products/${productId}/${fileName}`;
+    // Check if a PDF already exists for this product
+    if (fileType === 'pdf') {
+      const { data: existingPdf, error: pdfError } = await supabase
+        .from('product_files')
+        .select('id')
+        .eq('product_id', productId)
+        .eq('file_type', 'pdf')
+        .single();
 
-    // Upload the file to Supabase Storage
+      if (pdfError && !pdfError.details?.includes('0 rows')) {
+        throw pdfError;
+      }
+
+      if (existingPdf && !isUpdate) {
+        throw new Error('A PDF already exists for this product. Please delete it before uploading a new one.');
+      }
+    }
+
+    // Generate a unique filename
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${productId}/${Date.now()}.${fileExt}`;
+    const filePath = `${fileType === 'image' ? 'images' : 'docs'}/${fileName}`;
+
+    // Upload the file to storage
     const { error: uploadError } = await supabase.storage
-      .from('product-images')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
+      .from('products')
+      .upload(filePath, file, { upsert: isUpdate });
 
     if (uploadError) {
-      console.error('Storage upload error:', uploadError);
-      throw new Error('Failed to upload image. Please try again.');
+      throw uploadError;
     }
 
     // Get the public URL
     const { data: { publicUrl } } = supabase.storage
-      .from('product-images')
+      .from('products')
       .getPublicUrl(filePath);
 
-    let imageData;
-
-    if (existingImage) {
-      // Update existing image
-      const { data: updatedImage, error: updateError } = await supabase
-        .from('product_images')
-        .update({
-          url: publicUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', existingImage.id)
-        .select()
+    // If this is an update and a PDF, update the existing record
+    if (fileType === 'pdf' && isUpdate) {
+      const { data: existingPdf } = await supabase
+        .from('product_files')
+        .select('id')
+        .eq('product_id', productId)
+        .eq('file_type', 'pdf')
         .single();
 
-      if (updateError) throw updateError;
-      imageData = updatedImage;
-
-      // Clean up old image from storage if it exists
-      if (existingImage.url) {
-        const oldFileName = existingImage.url.split('/').pop();
-        if (oldFileName) {
-          await supabase.storage
-            .from('product-images')
-            .remove([`products/${productId}/${oldFileName}`])
-            .catch(cleanupError => 
-              console.error('Failed to clean up old image:', cleanupError)
-            );
-        }
-      }
-    } else {
-      // Insert new image
-      const { data: newImage, error: insertError } = await supabase
-        .from('product_images')
-        .insert([
-          {
-            product_id: productId,
+      if (existingPdf) {
+        const { data, error } = await supabase
+          .from('product_files')
+          .update({
             url: publicUrl,
-            is_primary: true,
-          },
-        ])
-        .select()
-        .single();
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingPdf.id)
+          .select()
+          .single();
 
-      if (insertError) throw insertError;
-      imageData = newImage;
+        if (error) throw error;
+        return { data, error: null };
+      }
     }
 
-    return { data: imageData, error: null };
+    // Insert the file record into the database
+    const { data, error } = await supabase
+      .from('product_files')
+      .insert([
+        {
+          product_id: productId,
+          url: publicUrl,
+          file_type: fileType,
+          is_primary: isPrimary
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return { data, error: null };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to upload product image';
-    console.error('Error in uploadProductImage:', error);
-    return { 
-      data: null, 
-      error: errorMessage 
+    console.error('Error uploading file:', error);
+    return {
+      data: null,
+      error: error instanceof Error ? error.message : 'Failed to upload file'
+    };
+  }
+}
+
+/**
+ * Uploads multiple product images to storage and associates them with a product
+ * @param productId - The ID of the product to associate the images with
+ * @param files - Array of image files to upload
+ * @param options - Optional configuration
+ * @returns The uploaded images data or an error
+ */
+export async function uploadProductImages(
+  productId: string,
+  files: File[],
+  options: { isUpdate?: boolean } = {}
+): Promise<UploadResult> {
+  const results: ProductFile[] = [];
+  
+  // Filter out any null/undefined files
+  const validFiles = files.filter(Boolean);
+  
+  // Check if we're within the limit
+  if (validFiles.length > MAX_IMAGES) {
+    return {
+      data: null,
+      error: `Maximum of ${MAX_IMAGES} images allowed per product.`
+    };
+  }
+
+  // Upload each file
+  for (const file of validFiles) {
+    const result = await uploadProductFile(productId, file, 'image', {
+      isPrimary: results.length === 0, // First image is primary
+      isUpdate: options.isUpdate
+    });
+
+    if (result.error) {
+      // If any upload fails, clean up the successful ones
+      if (results.length > 0) {
+        await Promise.all(
+          results.map(file => 
+            deleteProductFile(file.id).catch(console.error)
+          )
+        );
+      }
+      return result;
+    }
+
+    if (result.data) {
+      results.push(Array.isArray(result.data) ? result.data[0] : result.data);
+    }
+  }
+
+  return { data: results, error: null };
+}
+
+/**
+ * Deletes a product file from storage and database
+ * @param fileId - The ID of the file to delete
+ */
+export async function deleteProductFile(fileId: string): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  
+  try {
+    // First get the file record to delete from storage
+    const { data: file, error: fetchError } = await supabase
+      .from('product_files')
+      .select('*')
+      .eq('id', fileId)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!file) return { error: 'File not found' };
+
+    // Delete from storage
+    const filePath = file.url.split('/').slice(-2).join('/');
+    const { error: storageError } = await supabase.storage
+      .from('products')
+      .remove([filePath]);
+
+    if (storageError) throw storageError;
+
+    // Delete from database
+    const { error: dbError } = await supabase
+      .from('product_files')
+      .delete()
+      .eq('id', fileId);
+
+    if (dbError) throw dbError;
+
+    return { error: null };
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to delete file'
+    };
+  }
+}
+
+/**
+ * Gets all files for a product
+ * @param productId - The ID of the product
+ */
+export async function getProductFiles(productId: string): Promise<{ data: ProductFile[] | null; error: string | null }> {
+  const supabase = await createClient();
+  
+  try {
+    const { data, error } = await supabase
+      .from('product_files')
+      .select('*')
+      .eq('product_id', productId)
+      .order('is_primary', { ascending: false });
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error fetching product files:', error);
+    return {
+      data: null,
+      error: error instanceof Error ? error.message : 'Failed to fetch product files'
     };
   }
 }

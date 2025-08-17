@@ -1,23 +1,18 @@
 "use client";
 
 import { checkDuplicateProduct } from "@/actions/add-product";
-import { uploadProductImage } from "@/actions/file-upload";
-import { getCategories } from "@/actions/get-categories";
+import { deleteProductFile, uploadProductFile, uploadProductImages } from "@/actions/file-upload";
+import { Category, getCategories } from "@/actions/get-categories";
 import { updateProduct } from "@/actions/show-product";
 import { ProductForm } from "@/components/product/product-form";
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProduct } from "@/hooks/useProductQueries";
 import { createClient } from "@/utils/supabase/client";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { startTransition, use, useEffect, useState } from "react";
 import { toast } from "sonner";
-
-interface Category {
-  id: string;
-  name: string;
-  parent_id: string | null;
-}
 
 type Params = Promise<{ id: string }>;
 
@@ -28,11 +23,19 @@ export default function EditProductPage({
 }) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [isImageChanged, setIsImageChanged] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [previewPdf, setPreviewPdf] = useState<string | null>(null);
+  const [deletedFileIds, setDeletedFileIds] = useState<string[]>([]);
+  const [existingFiles, setExistingFiles] = useState<Array<{
+    id: string;
+    url: string;
+    file_type: string;
+    is_primary: boolean;
+  }>>([]);
 
   const paramsData = use(params);
 
@@ -42,11 +45,20 @@ export default function EditProductPage({
     true
   );
   
-
-  // Set preview image when product is loaded
+  // Set initial data when product is loaded
   useEffect(() => {
-    if (product?.images?.[0]?.url) {
-      setPreviewImage(product.images[0].url);
+    if (product) {
+      if (product.files) {
+        const images = product.files.filter((f: any) => f.file_type === 'image');
+        const pdf = product.files.find((f: any) => f.file_type === 'pdf');
+        
+        setExistingFiles(product.files);
+        setPreviewImages(images.map((img: any) => img.url));
+        
+        if (pdf) {
+          setPreviewPdf(pdf.url);
+        }
+      }
     }
   }, [product]);
 
@@ -67,31 +79,21 @@ export default function EditProductPage({
     loadCategories();
   }, []);
 
-  const handleImageChange = (file: File | null) => {
-    setSelectedImage(file);
-    setIsImageChanged(true);
-    
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setPreviewImage(null);
-    }
+  const handleFilesChange = (files: File[]) => {
+    setSelectedFiles(files);
+  };
+
+  const handlePdfChange = (file: File | null) => {
+    setSelectedPdf(file);
   };
 
   const handleSubmit = async (formData: any) => {
     setIsPending(true);
+    
     // Validate required fields
     if (!formData.name || !formData.price || !formData.unit) {
       toast.error("Please fill in all required fields");
-      return;
-    }
-
-    if (!formData.category_id) {
-      toast.error("Please select a category");
+      setIsPending(false);
       return;
     }
 
@@ -125,6 +127,7 @@ export default function EditProductPage({
         
         if (isDuplicate) {
           toast.error('A product with this name already exists in your business');
+          setIsPending(false);
           return;
         }
 
@@ -134,12 +137,13 @@ export default function EditProductPage({
           {
             name: formData.name.trim(),
             description: formData.description.trim(),
-            price: parseFloat(formData.price) || 0,
+            price: formData.price,
             unit: formData.unit,
-            moq: parseInt(formData.moq) || 1,
-            stock_quantity: parseInt(formData.stock_quantity) || 0,
+            moq: formData.moq,
+            stock_quantity: formData.stock_quantity,
             category_id: formData.category_id,
             is_active: formData.is_active,
+            youtube_url: formData.youtube_url || null,
           }
         );
 
@@ -147,22 +151,38 @@ export default function EditProductPage({
           throw new Error(updateError);
         }
 
-        // If image was changed, upload the new one
-        if (isImageChanged && selectedImage) {
-          const { error: uploadError } = await uploadProductImage(
-            paramsData.id,
-            selectedImage,
-            { isUpdate: true }
-          );
-
-          if (uploadError) {
-            console.error('Image upload failed:', uploadError);
-            toast.error('Product updated, but image upload failed');
+        // Process file uploads and deletions
+        try {
+          // Delete files that were marked for deletion
+          if (deletedFileIds.length > 0) {
+            await Promise.all(
+              deletedFileIds.map(fileId => 
+                deleteProductFile(fileId).catch(console.error)
+              )
+            );
           }
-        } else if (isImageChanged && !selectedImage) {
-          // Handle case where image was removed
-          // You might want to implement image deletion logic here if needed
-          toast.error('Image was removed');
+
+          // Upload new images if any
+          if (selectedFiles.length > 0) {
+            await uploadProductImages(
+              paramsData.id,
+              selectedFiles,
+              { isUpdate: true }
+            );
+          }
+
+          // Upload new PDF if provided
+          if (selectedPdf) {
+            await uploadProductFile(
+              paramsData.id,
+              selectedPdf,
+              'pdf',
+              { isUpdate: true }
+            );
+          }
+        } catch (fileError) {
+          console.error('File upload error:', fileError);
+          toast.error('Product updated, but there was an issue with file uploads');
         }
 
         setIsPending(false);
@@ -171,6 +191,7 @@ export default function EditProductPage({
       } catch (error) {
         console.error('Error updating product:', error);
         toast.error(error instanceof Error ? error.message : 'Failed to update product');
+        setIsPending(false);
       }
     });
   };
@@ -201,30 +222,47 @@ export default function EditProductPage({
   }
 
   return (
-    <div className="container mx-auto">
-      <div className="mb-6">
-        <h1 className="md:text-2xl font-bold">Edit Product</h1>
-        <p className="text-sm text-muted-foreground">Update your product details</p>
-      </div>
+    <Card className="container mx-auto py-6">
+      <CardHeader>
+        <CardTitle>
+        <Button
+          variant="link"
+          size={"icon"}
+          onClick={() => router.push('/products')}
+        >
+          <ArrowLeft/>
+        </Button>
+          Edit Product</CardTitle>
+        <CardDescription>Update your product details below</CardDescription>
+      </CardHeader>
       
+      <CardContent>
       <ProductForm
         initialData={{
           name: product.name,
           description: product.description || '',
-          price: product.price?.toString() || '',
+          price: product.price,
           unit: product.unit,
-          moq: (product.moq || 1).toString(),
-          stock_quantity: (product.stock_quantity || 0).toString(),
-          category_id: product.category_id || '',
-          is_active: product.is_active ?? true,
+          moq: product.moq,
+          stock_quantity: product.stock_quantity,
+          category_id: product.category_id,
+          is_active: product.is_active,
+          youtube_url: product.youtube_url || '',
+          files: [],
+          existingFiles: existingFiles,
+          pdfFile: null,
+          existingPdf: previewPdf,
         }}
         categories={categories}
         isPending={isPending}
         onSubmit={handleSubmit}
-        onImageChange={handleImageChange}
-        previewImage={previewImage}
+        onFilesChange={handleFilesChange}
+        onPdfChange={handlePdfChange}
+        previewImages={previewImages}
+        previewPdf={previewPdf}
         isEdit={true}
       />
-    </div>
+      </CardContent>
+    </Card>
   );
 }

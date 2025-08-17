@@ -4,13 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 type ProductSidebarProps = {
   status: string;
   createdAt: string;
-  updatedAt: string;
 };
 
 export function ProductSidebar({
   status,
   createdAt,
-  updatedAt,
 }: ProductSidebarProps) {
   return (
     <div className="space-y-6">
@@ -30,12 +28,6 @@ export function ProductSidebar({
               <span className="text-sm font-medium">Created</span>
               <span className="text-sm text-muted-foreground">
                 {new Date(createdAt).toLocaleDateString()}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Last Updated</span>
-              <span className="text-sm text-muted-foreground">
-                {new Date(updatedAt).toLocaleDateString()}
               </span>
             </div>
           </div>
