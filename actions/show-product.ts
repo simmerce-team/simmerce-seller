@@ -7,6 +7,7 @@ import { ProductFile } from './products';
 export interface Product {
   id: string;
   name: string;
+  slug: string;
   description: string | null;
   price: number;
   unit: string;

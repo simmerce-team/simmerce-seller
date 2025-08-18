@@ -12,7 +12,6 @@ import { getProductById, Product } from "@/actions/show-product";
 import { ProductHeader } from "./components/product-header";
 import { ImageArea } from "./components/product-images";
 import { ProductInfo } from "./components/product-info";
-import { ProductSidebar } from "./components/product-sidebar";
 
 type Params = Promise<{ id: string }>;
 
@@ -92,77 +91,58 @@ export default function ProductDetailPage({ params }: { params: Params }) {
         product={{
           id: product.id,
           name: product.name,
+          slug: product.slug,
           status: product.is_active ? "active" : "draft",
         }}
       />
 
-      <div className="grid gap-6 md:grid-cols-4">
-        {/* Main Content */}
-        <div className="md:col-span-3 space-y-6">
-          {/* Product Images and Basic Info */}
-          <div className="grid gap-4 md:grid-cols-5">
-            <div className="md:col-span-2">
-              <ImageArea product={product} />
-            </div>
-            <div className="md:col-span-3">
-              <Card>
-                <CardContent>
-                  <ProductInfo
-                    name={product.name}
-                    price={Number(product.price)}
-                    stockQuantity={product.stock_quantity || 0}
-                    category={product.category?.name}
-                    moq={product.moq}
-                    unit={product.unit}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Product Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Description</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose max-w-none text-slate-700">
-                {product.description ? (
-                  typeof product.description === "string" ? (
-                    <div
-                      className="prose prose-slate max-w-none"
-                      dangerouslySetInnerHTML={{ __html: product.description }}
-                    />
-                  ) : (
-                    <div className="space-y-2">
-                      {Object.entries(product.description).map(
-                        ([key, value]) => (
-                          <div key={key} className="flex gap-2">
-                            <span className="font-medium">{key}:</span>
-                            <span>{String(value)}</span>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  )
-                ) : (
-                  <p className="text-slate-500 italic">
-                    No description available for this product.
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+      {/* Product Images and Basic Info */}
+      <div className="grid gap-4 md:grid-cols-6">
+        <div className="md:col-span-2">
+          <ImageArea product={product} />
         </div>
-
-        {/* Sidebar */}
-        <div className="md:col-span-1">
-          <ProductSidebar
-            status={product.is_active ? "active" : "draft"}
-            createdAt={product.created_at}
+        <div className="md:col-span-4">
+          <ProductInfo
+            name={product.name}
+            price={Number(product.price)}
+            stockQuantity={product.stock_quantity || 0}
+            category={product.category?.name}
+            moq={product.moq}
+            unit={product.unit}
           />
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Description</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="prose max-w-none text-slate-700">
+            {product.description ? (
+              typeof product.description === "string" ? (
+                <div
+                  className="prose prose-slate max-w-none"
+                  dangerouslySetInnerHTML={{ __html: product.description }}
+                />
+              ) : (
+                <div className="space-y-2">
+                  {Object.entries(product.description).map(([key, value]) => (
+                    <div key={key} className="flex gap-2">
+                      <span className="font-medium">{key}:</span>
+                      <span>{String(value)}</span>
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : (
+              <p className="text-slate-500 italic">
+                No description available for this product.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

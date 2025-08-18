@@ -10,6 +10,7 @@ type ProductHeaderProps = {
   product: {
     id: string;
     name: string;
+    slug: string;
     status: string;
   };
 };
@@ -19,7 +20,7 @@ export function ProductHeader({ product }: ProductHeaderProps) {
 
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/products/${product.id}`);
+    navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_MAIN_URL}/products/${product.slug}`);
     toast.success("Product link copied to clipboard");
   };
 

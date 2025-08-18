@@ -218,7 +218,8 @@ export default function ProductsPage() {
                           <Link
                             href={`/products/${product.id}`}
                           >
-                            <Button variant="default" size="icon">
+                            <Button variant="default" size="icon"                             className="cursor-grab"
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
                           </Link>

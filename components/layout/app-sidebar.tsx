@@ -2,7 +2,6 @@
 
 import {
   LayoutGrid,
-  Magnet,
   MessageCircle,
   ShoppingBag
 } from "lucide-react"
@@ -42,11 +41,6 @@ const
           url: "/products",
         },
       ],
-    },
-    {
-      title: "Leads",
-      url: "/leads",
-      icon: Magnet,
     },
     {
       title: "Enquiries",
