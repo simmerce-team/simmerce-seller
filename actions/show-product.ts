@@ -9,9 +9,11 @@ export interface Product {
   name: string;
   slug: string;
   description: string | null;
+  specifications: Record<string, string> | null;
   price: number;
   unit: string;
   moq: number;
+  sku:string;
   is_active: boolean;
   stock_quantity: number;
   address: string | null;

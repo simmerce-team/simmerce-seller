@@ -238,13 +238,28 @@ export async function deleteProductFile(fileId: string): Promise<{ error: string
     if (fetchError) throw fetchError;
     if (!file) return { error: 'File not found' };
 
+    // Extract the correct file path from the public URL
+    // Supabase public URLs have format: https://[project].supabase.co/storage/v1/object/public/products/[filepath]
+    const urlParts = file.url.split('/');
+    const bucketIndex = urlParts.findIndex((part: string) => part === 'products');
+    
+    if (bucketIndex === -1 || bucketIndex === urlParts.length - 1) {
+      throw new Error('Invalid file URL format');
+    }
+    
+    // Get everything after the bucket name as the file path
+    const filePath = urlParts.slice(bucketIndex + 1).join('/');
+
     // Delete from storage
-    const filePath = file.url.split('/').slice(-2).join('/');
     const { error: storageError } = await supabase.storage
       .from('products')
       .remove([filePath]);
 
-    if (storageError) throw storageError;
+    if (storageError) {
+      console.error('Storage deletion error:', storageError);
+      // Continue with database deletion even if storage deletion fails
+      // This prevents orphaned database records
+    }
 
     // Delete from database
     const { error: dbError } = await supabase

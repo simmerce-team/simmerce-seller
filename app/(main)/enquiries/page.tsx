@@ -15,7 +15,29 @@ export default function EnquiriesPage() {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [showConversationList, setShowConversationList] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
   const supabase = createClient();
+
+  // Check if mobile on mount and on resize
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) {
+        setShowConversationList(true);
+      }
+    };
+    
+    // Initial check
+    checkIfMobile();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   // Fetch conversations on component mount
   useEffect(() => {
@@ -188,6 +210,14 @@ export default function EnquiriesPage() {
     }
   };
 
+  // Handle conversation selection on mobile
+  const handleSelectConversation = (conversationId: string) => {
+    setSelectedConversation(conversationId);
+    if (isMobile) {
+      setShowConversationList(false);
+    }
+  };
+
   const getSelectedConversation = () => {
     return conversations.find((conv) => conv.id === selectedConversation);
   };
@@ -204,32 +234,35 @@ export default function EnquiriesPage() {
     <div className="flex flex-col h-[calc(100vh-4rem)] bg-gray-50">
       <div className="flex flex-1 overflow-hidden">
         {/* Left column - Conversation list */}
-        <div className="w-80 border-r border-gray-200 bg-white overflow-y-auto flex-shrink-0">
-          <div className="p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
-            <h1 className="text-xl font-semibold">Messages</h1>
+        <div 
+          className={`${isMobile ? (showConversationList ? 'flex' : 'hidden') : 'flex'} 
+                     md:flex md:w-80 w-full flex-col border-r border-gray-200 bg-white overflow-y-auto flex-shrink-0`}
+        >
+          <div className="p-3 md:p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+            <h1 className="text-lg md:text-xl font-semibold">Messages</h1>
           </div>
           <div className="divide-y divide-gray-200">
             {conversations.length > 0 ? (
               conversations.map((conversation) => (
                 <div
                   key={conversation.id}
-                  className={`p-4 hover:bg-gray-50 cursor-pointer ${
+                  className={`p-3 md:p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
                     selectedConversation === conversation.id ? 'bg-blue-50' : ''
                   }`}
-                  onClick={() => setSelectedConversation(conversation.id)}
+                  onClick={() => handleSelectConversation(conversation.id)}
                 >
                   <div className="flex items-center space-x-3">
                     <div className="flex-shrink-0">
-                      <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                      <div className="h-9 w-9 md:h-10 md:w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
                         {conversation.buyer_name?.charAt(0) || 'B'}
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p className="text-sm md:text-base font-medium text-gray-900 truncate">
                           {conversation.buyer_name}
                         </p>
-                        <p className="text-xs text-gray-500 whitespace-nowrap">
+                        <p className="text-xs text-gray-500 whitespace-nowrap ml-2">
                           {conversation.last_message_at
                             ? formatDistanceToNow(new Date(conversation.last_message_at), {
                                 addSuffix: true,
@@ -237,7 +270,7 @@ export default function EnquiriesPage() {
                             : ''}
                         </p>
                       </div>
-                      <p className="text-sm text-gray-500 truncate">
+                      <p className="text-xs md:text-sm text-gray-500 truncate">
                         {conversation.last_message}
                       </p>
                     </div>
@@ -253,29 +286,40 @@ export default function EnquiriesPage() {
         </div>
 
         {/* Right column - Chat area */}
-        <div className="flex-1 flex flex-col bg-white border-l border-gray-200">
+        <div className={`${!isMobile || !showConversationList ? 'flex' : 'hidden'} flex-1 flex-col bg-white border-l border-gray-200`}>
           {selectedConversation ? (
             <>
-              <div className="p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+              <div className="p-3 md:p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
                 <div className="flex items-center">
-                  <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 mr-3">
+                  {isMobile && (
+                    <button 
+                      onClick={() => setShowConversationList(true)}
+                      className="mr-2 p-1 rounded-full hover:bg-gray-100"
+                      aria-label="Back to conversations"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                  )}
+                  <div className="h-9 w-9 md:h-10 md:w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 mr-3 flex-shrink-0">
                     {getSelectedConversation()?.buyer_name?.charAt(0) || 'B'}
                   </div>
-                  <div>
-                    <h2 className="text-lg font-medium">
+                  <div className="truncate">
+                    <h2 className="text-base md:text-lg font-medium truncate">
                       {getSelectedConversation()?.buyer_name || 'Buyer'}
                     </h2>
                   </div>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4">
                 {isLoading ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
                   </div>
                 ) : messages.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="flex items-center justify-center h-full text-gray-500 text-center px-4">
                     No messages yet. Start the conversation!
                   </div>
                 ) : (
@@ -285,13 +329,13 @@ export default function EnquiriesPage() {
                       className={`flex ${message.is_sender ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                        className={`max-w-[80%] md:max-w-md px-3 py-2 rounded-lg text-sm md:text-base ${
                           message.is_sender
                             ? 'bg-blue-600 text-white rounded-bl-none'
                             : 'bg-gray-100 text-gray-800 rounded-br-none'
                         }`}
                       >
-                        <p className="text-sm">{message.message_content}</p>
+                        <p>{message.message_content}</p>
                         <p
                           className={`text-xs mt-1 ${
                             message.is_sender ? 'text-blue-100' : 'text-gray-500'
@@ -307,26 +351,41 @@ export default function EnquiriesPage() {
                 )}
               </div>
 
-              <div className="p-4 border-t border-gray-200">
+              <div className="p-3 md:p-4 border-t border-gray-200 bg-white">
                 <form onSubmit={handleSendMessage} className="flex space-x-2">
                   <Input
                     type="text"
                     placeholder="Type a message..."
-                    className="flex-1"
+                    className="flex-1 text-sm md:text-base"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     disabled={isSending}
                   />
-                  <Button type="submit" disabled={!newMessage.trim() || isSending}>
-                    <Send className="h-4 w-4 mr-2" />
-                    Send
+                  <Button 
+                    type="submit" 
+                    size={isMobile ? 'icon' : 'default'}
+                    className="h-10 w-10 md:w-auto md:px-4"
+                    disabled={!newMessage.trim() || isSending}
+                  >
+                    {isMobile ? (
+                      <Send className="h-5 w-5" />
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Send
+                      </>
+                    )}
                   </Button>
                 </form>
               </div>
             </>
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-500">
-              {conversations.length === 0 ? 'Start a new conversation' : 'Select a conversation to start chatting'}
+            <div className="flex items-center justify-center h-full text-gray-500 px-4 text-center">
+              {conversations.length === 0 
+                ? 'Start a new conversation' 
+                : isMobile 
+                  ? 'Select a conversation to start chatting' 
+                  : 'Select a conversation from the list to start chatting'}
             </div>
           )}
         </div>

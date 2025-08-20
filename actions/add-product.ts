@@ -31,9 +31,11 @@ export async function checkDuplicateProduct(name: string, businessId: string, ex
 export type AddProductInput = {
   name: string;
   description: string;
+  specifications?: Record<string, string> | null;
   price: number;
   unit: string;
   moq: number;
+  sku?:string | null;
   stock_quantity: number;
   is_active?: boolean;
   category_id?: string | null;

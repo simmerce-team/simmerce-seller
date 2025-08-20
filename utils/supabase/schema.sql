@@ -108,6 +108,7 @@ create table if not exists products (
   name text not null,
   slug text not null,
   description text,
+  specifications jsonb,
   category_id uuid references categories(id) on delete set null,
   price numeric(10,2) not null check (price >= 0),
   unit text not null,

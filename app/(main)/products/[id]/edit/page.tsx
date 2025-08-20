@@ -1,8 +1,8 @@
 "use client";
 
 import { checkDuplicateProduct } from "@/actions/add-product";
+import { Category, getCategories } from "@/actions/categories";
 import { deleteProductFile, uploadProductFile, uploadProductImages } from "@/actions/file-upload";
-import { Category, getCategories } from "@/actions/get-categories";
 import { updateProduct } from "@/actions/show-product";
 import { ProductForm } from "@/components/product/product-form";
 import { Button } from '@/components/ui/button';
