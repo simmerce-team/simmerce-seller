@@ -21,4 +21,6 @@ export const UNITS = [
 export const MAX_IMAGES = 3;
 export const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 export const MAX_PDF_SIZE = 2 * 1024 * 1024; // 2MB
-export const MAX_TOTAL_SIZE = 5 * 1024 * 1024; // 5MB
+
+export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+export const ALLOWED_PDF_TYPE = 'application/pdf';

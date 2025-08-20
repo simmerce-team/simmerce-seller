@@ -1,277 +1,356 @@
 "use client";
 
-import { addProduct, checkDuplicateProduct } from '@/actions/add-product';
-import { Category, getCategories } from '@/actions/categories';
-import { uploadProductFile, uploadProductImages } from '@/actions/file-upload';
-import { deleteProduct } from '@/actions/show-product';
-import { ProductForm } from '@/components/product/product-form';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { createClient } from '@/utils/supabase/client';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
-import { toast } from 'sonner';
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
-// Constants for file validation
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
-const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_IMAGES = 3;
+import { createProduct } from "@/actions/products";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { useCategories } from "@/hooks/use-categories";
+
+interface ProductFormData {
+  name: string;
+  description: string;
+  price: string;
+  unit: string;
+  moq: string;
+  stock_quantity: string;
+  category_id: string;
+  sku: string;
+  is_active: boolean;
+}
 
 export default function AddProductPage() {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [selectedPdf, setSelectedPdf] = useState<File | null>(null);
-  const [previewImages, setPreviewImages] = useState<string[]>([]);
-  const [previewPdf, setPreviewPdf] = useState<string | null>(null);
+  const { data: categories, isLoading: categoriesLoading } = useCategories();
 
-  // Fetch categories on component mount
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const data = await getCategories();
-        setCategories(data);
-      } catch (error) {
-        console.error('Failed to load categories:', error);
-        toast.error('Failed to load categories');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const [formData, setFormData] = useState<ProductFormData>({
+    name: "",
+    description: "",
+    price: "",
+    unit: "piece",
+    moq: "1",
+    stock_quantity: "",
+    category_id: "",
+    sku: "",
+    is_active: true,
+  });
 
-    loadCategories();
-  }, []);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Partial<ProductFormData>>({});
 
-  const validateFiles = (files: File[]): { valid: boolean; message?: string } => {
-    // Check number of images
-    if (files.length > MAX_IMAGES) {
-      return { valid: false, message: `You can upload a maximum of ${MAX_IMAGES} images` };
+  // Handle input changes
+  const handleInputChange = (
+    field: keyof ProductFormData,
+    value: string | boolean
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
-
-    // Check each file size and type
-    for (const file of files) {
-      if (file.type.startsWith('image/')) {
-        if (file.size > MAX_IMAGE_SIZE) {
-          return { valid: false, message: `Image ${file.name} exceeds the maximum size of 5MB` };
-        }
-      } else if (file.type === 'application/pdf') {
-        if (file.size > MAX_PDF_SIZE) {
-          return { valid: false, message: `PDF ${file.name} exceeds the maximum size of 10MB` };
-        }
-      } else {
-        return { valid: false, message: `Unsupported file type: ${file.name}. Only images and PDFs are allowed.` };
-      }
-    }
-
-    return { valid: true };
   };
 
-  const handleFilesChange = (files: File[]) => {
-    const validation = validateFiles(files);
-    if (!validation.valid) {
-      toast.error(validation.message);
-      return;
+  // Validate form
+  const validateForm = (): boolean => {
+    const newErrors: Partial<ProductFormData> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Product name is required";
     }
-    
-    // Revoke old URLs to prevent memory leaks
-    previewImages.forEach(url => URL.revokeObjectURL(url));
-    
-    // Create new preview URLs for images only
-    const newPreviewUrls = files
-      .filter(file => file.type.startsWith('image/'))
-      .map(file => URL.createObjectURL(file));
-      
-    setPreviewImages(newPreviewUrls);
-    setSelectedFiles(files);
+
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      newErrors.price = "Valid price is required";
+    }
+
+    if (!formData.unit.trim()) {
+      newErrors.unit = "Unit is required";
+    }
+
+    if (!formData.moq || parseInt(formData.moq) <= 0) {
+      newErrors.moq = "Valid MOQ is required";
+    }
+
+    if (!formData.stock_quantity || parseInt(formData.stock_quantity) < 0) {
+      newErrors.stock_quantity = "Valid stock quantity is required";
+    }
+
+    if (!formData.category_id) {
+      newErrors.category_id = "Category is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handlePdfChange = (file: File | null) => {
-    if (file) {
-      if (file.size > MAX_PDF_SIZE) {
-        toast.error(`PDF exceeds the maximum size of 10MB`);
-        return;
-      }
-      
-      if (file.type !== 'application/pdf') {
-        toast.error('Only PDF files are allowed');
-        return;
-      }
-      
-      // Revoke old URL if exists
-      if (previewPdf) {
-        URL.revokeObjectURL(previewPdf);
-      }
-      
-      const url = URL.createObjectURL(file);
-      setPreviewPdf(url);
-    } else {
-      if (previewPdf) {
-        URL.revokeObjectURL(previewPdf);
-      }
-      setPreviewPdf(null);
-    }
-    
-    setSelectedPdf(file);
-  };
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleSubmit = async (formData: any) => {
-    // Validate required fields
-    if (!formData.name?.trim() || !formData.price || !formData.unit) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-    
-    if (selectedFiles.length === 0) {
-      toast.error('Please upload at least one product image');
+    if (!validateForm()) {
+      toast.error("Please fix the errors in the form");
       return;
     }
 
-    setIsLoading(true);
-    
+    setIsSubmitting(true);
+
     try {
-      // Get the current user's business
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('Authentication failed. Please log in again.');
-      }
-
-      // Get the user's business
-      const { data: userBusiness } = await supabase
-        .from('user_businesses')
-        .select('business_id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!userBusiness) {
-        throw new Error('Unable to find your business account.');
-      }
-
-      // Check for duplicate product name within the same business
-      const isDuplicate = await checkDuplicateProduct(
-        formData.name.trim(), 
-        userBusiness.business_id
-      );
-      
-      if (isDuplicate) {
-        toast.error('A product with this name already exists in your business');
-        setIsLoading(false);
-        return;
-      }
-
-      // First create the product
-      const { data: product, error: productError } = await addProduct({
+      const result = await createProduct({
         name: formData.name.trim(),
-        description: formData.description?.trim() || '',
-        price: parseFloat(formData.price) || 0,
+        description: formData.description.trim(),
+        price: parseFloat(formData.price),
         unit: formData.unit,
-        moq: parseInt(formData.moq) || 1,
-        stock_quantity: parseInt(formData.stock_quantity) || 0,
-        category_id: formData.category_id || null,
-        is_active: formData.is_active ?? true,
-        youtube_url: formData.youtube_url || null,
+        moq: parseInt(formData.moq, 10) || 1,
+        stock_quantity: parseInt(formData.stock_quantity, 10) || 0,
+        category_id: formData.category_id,
+        sku: formData.sku.trim() || undefined,
+        is_active: formData.is_active
       });
 
-      if (productError || !product) {
-        throw new Error(productError || 'Failed to create product');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create product');
       }
 
-      // Process file uploads in sequence to handle errors properly
-      try {
-        // Upload images
-        if (selectedFiles.length > 0) {
-          const { error: imageError } = await uploadProductImages(
-            product.id,
-            selectedFiles
-          );
-          
-          if (imageError) {
-            throw new Error(`Image upload failed: ${imageError}`);
-          }
-        }
-
-        // Upload PDF if provided
-        if (selectedPdf) {
-          const { error: pdfError } = await uploadProductFile(
-            product.id,
-            selectedPdf,
-            'pdf'
-          );
-          
-          if (pdfError) {
-            throw new Error(`PDF upload failed: ${pdfError}`);
-          }
-        }
-
-        toast.success('Product added successfully!');
-        router.push(`/products/${product.id}`);
-      } catch (uploadError) {
-        // If file upload fails, delete the product to maintain consistency
-        console.error('File upload error:', uploadError);
-        await deleteProduct(product.id).catch(console.error);
-        throw new Error('Failed to upload files. Please try again.');
-      }
+      toast.success("Product created successfully!");
+      
+      // Redirect to products list after a short delay to show success message
+      setTimeout(() => {
+        router.push("/products");
+      }, 1000);
+      
     } catch (error) {
-      console.error('Error adding product:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to add product');
+      console.error("Error creating product:", error);
+      toast.error(
+        error instanceof Error 
+          ? error.message 
+          : "Failed to create product. Please try again."
+      );
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
   return (
-    <Card className="container mx-auto py-6">
+    <Card>
       <CardHeader>
-        <CardTitle>
-        <Button
-          variant="link"
-          size={"icon"}
-          onClick={() => router.push('/products')}
-        >
-          <ArrowLeft/>
-        </Button>
-          Add New Product</CardTitle>
-        <CardDescription>Add a new product to your inventory</CardDescription>
+        <CardTitle className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/products">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <span className="font-bold">Add Product</span>
+        </CardTitle>
       </CardHeader>
       <CardContent>
-      <ProductForm
-        initialData={{
-          name: '',
-          description: '',
-          price: 0,
-          unit: 'pcs',
-          moq: 1,
-          stock_quantity: 0,
-          category_id: '',
-          is_active: true,
-          youtube_url: '',
-          files: [],
-          existingFiles: [],
-          pdfFile: null,
-          existingPdf: null,
-        }}
-        categories={categories}
-        isPending={isPending}
-        onSubmit={handleSubmit}
-        onFilesChange={handleFilesChange}
-        onPdfChange={handlePdfChange}
-        previewImages={previewImages}
-        previewPdf={previewPdf}
-        isEdit={false}
-      />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Product Name */}
+          <div className="space-y-2">
+            <Label htmlFor="name">Product Name *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              placeholder="Enter product name"
+              className={errors.name ? "border-destructive" : ""}
+            />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name}</p>
+            )}
+          </div>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => handleInputChange("description", e.target.value)}
+              placeholder="Enter product description"
+              rows={3}
+            />
+          </div>
+
+          {/* Price, Unit, MOQ - First Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Price */}
+            <div className="space-y-2">
+              <Label htmlFor="price">Price *</Label>
+              <Input
+                id="price"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.price}
+                onChange={(e) => handleInputChange("price", e.target.value)}
+                placeholder="0.00"
+                className={errors.price ? "border-destructive" : ""}
+              />
+              {errors.price && (
+                <p className="text-sm text-destructive">{errors.price}</p>
+              )}
+            </div>
+
+            {/* Unit */}
+            <div className="space-y-2">
+              <Label htmlFor="unit">Unit *</Label>
+              <Select
+                value={formData.unit}
+                onValueChange={(value) => handleInputChange("unit", value)}
+              >
+                <SelectTrigger className={errors.unit ? "border-destructive w-full" : "w-full"}>
+                  <SelectValue placeholder="Select unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="piece">Piece</SelectItem>
+                  <SelectItem value="kg">Kilogram</SelectItem>
+                  <SelectItem value="gram">Gram</SelectItem>
+                  <SelectItem value="liter">Liter</SelectItem>
+                  <SelectItem value="meter">Meter</SelectItem>
+                  <SelectItem value="box">Box</SelectItem>
+                  <SelectItem value="pack">Pack</SelectItem>
+                  <SelectItem value="set">Set</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.unit && (
+                <p className="text-sm text-destructive">{errors.unit}</p>
+              )}
+            </div>
+
+            {/* MOQ */}
+            <div className="space-y-2">
+              <Label htmlFor="moq">Minimum Order Qty *</Label>
+              <Input
+                id="moq"
+                type="number"
+                min="1"
+                value={formData.moq}
+                onChange={(e) => handleInputChange("moq", e.target.value)}
+                placeholder="1"
+                className={errors.moq ? "border-destructive" : ""}
+              />
+              {errors.moq && (
+                <p className="text-sm text-destructive">{errors.moq}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Stock, Category, SKU - Second Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Stock */}
+            <div className="space-y-2">
+              <Label htmlFor="stock_quantity">Stock Quantity *</Label>
+              <Input
+                id="stock_quantity"
+                type="number"
+                min="0"
+                value={formData.stock_quantity}
+                onChange={(e) =>
+                  handleInputChange("stock_quantity", e.target.value)
+                }
+                placeholder="0"
+                className={errors.stock_quantity ? "border-destructive" : ""}
+              />
+              {errors.stock_quantity && (
+                <p className="text-sm text-destructive">
+                  {errors.stock_quantity}
+                </p>
+              )}
+            </div>
+
+            {/* Category */}
+            <div className="space-y-2">
+              <Label htmlFor="category">Category *</Label>
+              <Select
+                value={formData.category_id}
+                onValueChange={(value) => handleInputChange("category_id", value)}
+                disabled={categoriesLoading}
+              >
+                <SelectTrigger
+                  className={errors.category_id ? "border-destructive w-full" : "w-full"}
+                >
+                  <SelectValue
+                    placeholder={
+                      categoriesLoading ? "Loading..." : "Select category"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories?.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.category_id && (
+                <p className="text-sm text-destructive">{errors.category_id}</p>
+              )}
+            </div>
+
+            {/* SKU */}
+            <div className="space-y-2">
+              <Label htmlFor="sku">SKU (Optional)</Label>
+              <Input
+                id="sku"
+                value={formData.sku}
+                onChange={(e) => handleInputChange("sku", e.target.value)}
+                placeholder="Enter product SKU"
+              />
+            </div>
+          </div>
+
+          {/* Active Status */}
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="is_active"
+              checked={formData.is_active}
+              onCheckedChange={(checked) =>
+                handleInputChange("is_active", checked)
+              }
+            />
+            <Label htmlFor="is_active">Active Product</Label>
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex gap-4 pt-4 justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting} className="min-w-32">
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  Create Product
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
       </CardContent>
-    </Card>  
+    </Card>
   );
 }

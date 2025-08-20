@@ -1,6 +1,7 @@
 'use client';
 
 import { login } from '@/actions/auth';
+import { PasswordInput } from '@/components/auth/PasswordInput';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -9,7 +10,6 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { PasswordInput } from '../shared/components/forms';
 
 function LoginContent() {
   const searchParams = useSearchParams();

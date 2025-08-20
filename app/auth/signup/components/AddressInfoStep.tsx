@@ -1,6 +1,6 @@
 'use client';
 
-import { City, State } from '@/actions/auth';
+import { City, State } from '@/actions/location';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -44,7 +44,7 @@ export function AddressInfoStep({
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const { getStates } = await import('@/actions/auth');
+        const { getStates } = await import('@/actions/location');
         const statesData = await getStates();
         setStates(statesData);
       } catch (error) {
@@ -67,7 +67,7 @@ export function AddressInfoStep({
 
       setIsLoadingCities(true);
       try {
-        const { getCitiesByState } = await import('@/actions/auth');
+        const { getCitiesByState } = await import('@/actions/location');
         const citiesData = await getCitiesByState(formData.stateId);
         setCities(citiesData);
       } catch (error) {
@@ -106,7 +106,7 @@ export function AddressInfoStep({
     
     setIsAddingCity(true);
     try {
-      const { addNewCity } = await import('@/actions/auth');
+      const { addNewCity } = await import('@/actions/location');
       const addedCity = await addNewCity(newCity.trim(), formData.stateId, countryId);
       
       // Update cities list

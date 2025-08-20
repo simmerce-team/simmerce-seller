@@ -1,148 +1,82 @@
-"use client";
-
+import { getProduct, ProductDetail } from "@/actions/products";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
-import { toast } from "sonner";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import ProductDetails from "./_components/product-detail";
+import ProductHeader from "./_components/product-header";
+import ProductMedia from "./_components/product-media";
 
-// Components
-import { getProductById, Product } from "@/actions/show-product";
-import { ProductHeader } from "./components/product-header";
-import { ImageArea } from "./components/product-images";
-import { ProductInfo } from "./components/product-info";
-
-type Params = Promise<{ id: string }>;
-
-export default function ProductDetailPage({ params }: { params: Params }) {
-  const router = useRouter();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const { id: productId } = use(params);
-
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await getProductById(productId);
-
-        if (error) {
-          console.error("Error fetching product:", error);
-          setError(error);
-          toast.error(error);
-          return;
-        }
-
-        setProduct(data);
-      } catch (err) {
-        console.error("Caught error in fetchProduct:", err);
-        const message =
-          err instanceof Error ? err.message : "Failed to fetch product";
-        setError(message);
-        toast.error(message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (productId) {
-      fetchProduct().catch((err) => {
-        console.error("Unhandled error in fetchProduct:", err);
-      });
-    } else {
-      setError("No product ID provided");
-      setLoading(false);
-    }
-  }, [productId]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+// Loading component
+function ProductLoading() {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="space-y-4">
+          <div className="aspect-square bg-muted rounded-lg" />
+          <div className="grid grid-cols-4 gap-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="aspect-square bg-muted rounded-md" />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className="h-8 bg-muted rounded w-3/4" />
+          <div className="h-6 bg-muted rounded w-1/2" />
+          <div className="h-32 bg-muted rounded" />
+        </div>
       </div>
-    );
+    </div>
+  );
+}
+
+// Main component
+async function ProductContent({ id }: { id: string }) {
+  let product: ProductDetail | null = null;
+
+  try {
+    product = await getProduct(id);
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    notFound();
   }
 
-  if (error || !product) {
-    return (
-      <div className="text-center">
-        <h2 className="text-xl font-semibold mb-2">Product Not Found</h2>
-        <p className="text-muted-foreground mb-6">
-          The product you're looking for doesn't exist or has been removed.
-        </p>
-        <Button
-          variant="outline"
-          onClick={() => router.push("/products")}
-          className="gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Products
-        </Button>
-      </div>
-    );
-  }
+  if (!product) return null;
 
   return (
-    <div className="space-y-6">
-      <ProductHeader
-        product={{
-          id: product.id,
-          name: product.name,
-          slug: product.slug,
-          status: product.is_active ? "active" : "draft",
-        }}
-      />
+    <div className="container mx-auto px-4 py-8">
+      <Button variant="ghost" className="mb-6" asChild>
+        <Link href="/products" className="flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Back to Products
+        </Link>
+      </Button>
 
-      {/* Product Images and Basic Info */}
-      <div className="grid gap-4 md:grid-cols-6">
+      <div className="grid md:grid-cols-5 gap-4 items-start">
         <div className="md:col-span-2">
-          <ImageArea product={product} />
+          <ProductMedia product={product} />
         </div>
-        <div className="md:col-span-4">
-          <ProductInfo
-            name={product.name}
-            price={Number(product.price)}
-            stockQuantity={product.stock_quantity || 0}
-            category={product.category?.name}
-            moq={product.moq}
-            unit={product.unit}
-          />
+
+        <div className="md:col-span-3">
+          <div className="space-y-4">
+            <ProductHeader product={product} />
+            <ProductDetails product={product} />
+          </div>
         </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Description</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="prose max-w-none text-slate-700">
-            {product.description ? (
-              typeof product.description === "string" ? (
-                <div
-                  className="prose prose-slate max-w-none"
-                  dangerouslySetInnerHTML={{ __html: product.description }}
-                />
-              ) : (
-                <div className="space-y-2">
-                  {Object.entries(product.description).map(([key, value]) => (
-                    <div key={key} className="flex gap-2">
-                      <span className="font-medium">{key}:</span>
-                      <span>{String(value)}</span>
-                    </div>
-                  ))}
-                </div>
-              )
-            ) : (
-              <p className="text-slate-500 italic">
-                No description available for this product.
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
     </div>
+  );
+}
+
+export default async function ProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <Suspense fallback={<ProductLoading />}>
+      <ProductContent id={(await params).id} />
+    </Suspense>
   );
 }

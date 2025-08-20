@@ -1,6 +1,7 @@
 "use client";
 
 import { signUp } from "@/actions/auth";
+import { BusinessType, getBusinessTypes } from "@/actions/business-types";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,12 +21,6 @@ import {
   AddressInfoStep,
   BusinessInfoStep,
 } from "./components";
-
-interface BusinessType {
-  id: string;
-  name: string;
-  description: string | null;
-}
 
 function SignUpContent() {
   const searchParams = useSearchParams();
@@ -55,7 +50,6 @@ function SignUpContent() {
   useEffect(() => {
     const fetchBusinessTypes = async () => {
       try {
-        const { getBusinessTypes } = await import("@/actions/auth");
         const businessTypes = await getBusinessTypes();
         setBusinessTypes(businessTypes);
       } catch (error) {
