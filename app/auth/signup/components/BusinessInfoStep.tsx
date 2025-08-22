@@ -1,6 +1,12 @@
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface BusinessType {
   id: string;
@@ -52,7 +58,7 @@ export function BusinessInfoStep({
         <Label htmlFor="businessTypeId">Business Type</Label>
         <Select
           value={formData.businessTypeId}
-          onValueChange={(value) => handleSelectChange('businessTypeId', value)}
+          onValueChange={(value) => handleSelectChange("businessTypeId", value)}
           disabled={isPending || isSubmitting || isLoadingBusinessTypes}
           required
         >

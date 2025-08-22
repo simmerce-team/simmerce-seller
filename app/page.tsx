@@ -16,22 +16,22 @@ import Link from 'next/link';
 export default function SellerHomePage() {
   const features = [
     {
-      icon: <Package className="w-6 h-6 text-red-600" />,
+      icon: <Package className="w-6 h-6 text-primary" />,
       title: "Easy Product Listings",
       description: "List your products quickly and reach thousands of potential buyers."
     },
     {
-      icon: <Shield className="w-6 h-6 text-red-600" />,
+      icon: <Shield className="w-6 h-6 text-primary" />,
       title: "Verified Buyers",
       description: "Connect with genuine B2B buyers looking for your products."
     },
     {
-      icon: <BarChart className="w-6 h-6 text-red-600" />,
+      icon: <BarChart className="w-6 h-6 text-primary" />,
       title: "Business Insights",
       description: "Get valuable analytics about your store performance and customer behavior."
     },
     {
-      icon: <Users className="w-6 h-6 text-red-600" />,
+      icon: <Users className="w-6 h-6 text-primary" />,
       title: "Dedicated Support",
       description: "24/7 support to help you grow your business on our platform."
     }
@@ -67,7 +67,7 @@ export default function SellerHomePage() {
               Trusted by 10,000+ sellers across India
             </div>
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              Grow Your <span className="text-red-400">B2B Business</span> 
+              Grow Your <span className="text-primary">B2B Business</span> 
               <br className="hidden md:block" />
               with Simmerce
             </h1>
@@ -78,7 +78,7 @@ export default function SellerHomePage() {
               <Link href="/auth/signup" className="w-full sm:w-auto">
                 <Button 
                   size="lg" 
-                  className="w-full bg-red-600 hover:bg-red-700 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
+                  className="w-full bg-primary hover:bg-primary/90 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
                 >
                   Start Selling Now <ChevronRight className="ml-2 w-4 h-4" />
                 </Button>
@@ -122,10 +122,10 @@ export default function SellerHomePage() {
       <section id="features" className="py-20 bg-white">
         <div className="container mx-auto px-6 max-w-7xl">
           <div className="text-center mb-16">
-            <span className="inline-block px-4 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-full mb-4">
+            <span className="inline-block px-4 py-1.5 text-sm font-medium text-primary bg-primary/10 rounded-full mb-4">
               Why Choose Us
             </span>
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">Everything You Need to <span className="text-red-600">Succeed</span></h2>
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">Everything You Need to <span className="text-primary">Succeed</span></h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
               Powerful tools and features designed to help your business grow in the digital marketplace
             </p>
@@ -135,10 +135,10 @@ export default function SellerHomePage() {
             {features.map((feature, index) => (
               <div 
                 key={index} 
-                className="group p-6 rounded-xl border border-slate-100 hover:border-red-100 hover:bg-red-50/30 transition-all duration-300"
+                className="group p-6 rounded-xl border border-slate-100 hover:border-primary/20 hover:bg-primary/5 transition-all duration-300"
               >
                 <div className="flex items-start gap-5">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center group-hover:bg-white transition-colors duration-300">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-white transition-colors duration-300">
                     {feature.icon}
                   </div>
                   <div>
@@ -151,7 +151,7 @@ export default function SellerHomePage() {
           </div>
           
           {/* Feature Highlight */}
-          <div className="mt-16 bg-gradient-to-r from-red-50 to-white p-8 rounded-2xl border border-red-100">
+          <div className="mt-16 bg-gradient-to-r from-primary/5 to-white p-8 rounded-2xl border border-primary/10">
             <div className="flex flex-col md:flex-row items-center gap-8">
               <div className="md:w-1/2">
                 <h3 className="text-2xl font-bold text-slate-900 mb-4">Sell More with Less Effort</h3>
@@ -174,12 +174,12 @@ export default function SellerHomePage() {
               </div>
               <div className="md:w-1/2 bg-slate-100 rounded-xl h-80 flex items-center justify-center">
                 <div className="text-center p-6">
-                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <TrendingUp className="w-8 h-8 text-red-600" />
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <TrendingUp className="w-8 h-8 text-primary" />
                   </div>
                   <h4 className="text-lg font-semibold text-slate-800 mb-2">Grow Your Business</h4>
                   <p className="text-slate-600 mb-4">Join sellers who are seeing 3x more sales on average</p>
-                  <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50">
+                  <Button variant="outline" className="border-primary/20 text-primary hover:bg-primary/5">
                     See Success Stories <ChevronRight className="ml-1 w-4 h-4" />
                   </Button>
                 </div>
@@ -193,10 +193,10 @@ export default function SellerHomePage() {
       <section className="py-20 bg-slate-50">
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="text-center mb-16">
-            <span className="inline-block px-4 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-full mb-4">
+            <span className="inline-block px-4 py-1.5 text-sm font-medium text-primary bg-primary/10 rounded-full mb-4">
               Simple Process
             </span>
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">Start Selling in <span className="text-red-600">3 Simple Steps</span></h2>
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">Start Selling in <span className="text-primary">3 Simple Steps</span></h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
               Get your products in front of thousands of B2B buyers in minutes
             </p>
@@ -204,7 +204,7 @@ export default function SellerHomePage() {
           
           <div className="relative">
             {/* Timeline line */}
-            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-red-100 via-red-200 to-red-100 -ml-px"></div>
+            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-primary/10 via-primary/20 to-primary/10 -ml-px"></div>
             
             <div className="space-y-12 md:space-y-16">
               {steps.map((step, index) => (
@@ -212,8 +212,8 @@ export default function SellerHomePage() {
                   key={index} 
                   className={`relative flex flex-col md:flex-row items-center ${index % 2 === 0 ? 'md:text-right' : 'md:flex-row-reverse md:text-left'}`}
                 >
-                  <div className={`flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-red-50 to-white border-2 border-white shadow-md flex items-center justify-center relative z-10 mb-6 md:mb-0 ${index % 2 === 0 ? 'md:mr-12' : 'md:ml-12'}`}>
-                    <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-white font-bold text-xl">
+                  <div className={`flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-primary/5 to-white border-2 border-white shadow-md flex items-center justify-center relative z-10 mb-6 md:mb-0 ${index % 2 === 0 ? 'md:mr-12' : 'md:ml-12'}`}>
+                    <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl">
                       {step.number}
                     </div>
                   </div>
@@ -223,7 +223,7 @@ export default function SellerHomePage() {
                     <p className="text-slate-600">{step.description}</p>
                     {index === 0 && (
                       <div className="mt-4">
-                        <Link href="/auth/signup" className="inline-flex items-center text-red-600 font-medium hover:underline">
+                        <Link href="/auth/signup" className="inline-flex items-center text-primary font-medium hover:underline">
                           Create your account now <ChevronRight className="ml-1 w-4 h-4" />
                         </Link>
                       </div>
@@ -238,17 +238,17 @@ export default function SellerHomePage() {
             <div className="inline-flex items-center px-6 py-3 bg-white rounded-full shadow-sm mb-8">
               <div className="flex -space-x-2 mr-4">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-10 h-10 rounded-full bg-red-100 border-2 border-white"></div>
+                  <div key={i} className="w-10 h-10 rounded-full bg-primary/10 border-2 border-white"></div>
                 ))}
               </div>
-              <span className="text-slate-700 font-medium">Join <span className="text-red-600">10,000+</span> sellers growing with Simmerce</span>
+              <span className="text-slate-700 font-medium">Join <span className="text-primary">10,000+</span> sellers growing with Simmerce</span>
             </div>
             
             <div className="space-y-4">
               <Link href="/auth/signup">
                 <Button 
                   size="lg" 
-                  className="bg-red-600 hover:bg-red-700 text-white font-medium shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 px-8 h-12 text-base"
+                  className="bg-primary hover:bg-primary/90 text-white font-medium shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 px-8 h-12 text-base"
                 >
                   Get Started - It's Free <ChevronRight className="ml-2 w-4 h-4" />
                 </Button>
@@ -263,10 +263,10 @@ export default function SellerHomePage() {
       <section className="py-20 bg-white">
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="text-center mb-16">
-            <span className="inline-block px-4 py-1.5 text-sm font-medium text-red-600 bg-red-50 rounded-full mb-4">
+            <span className="inline-block px-4 py-1.5 text-sm font-medium text-primary bg-primary/10 rounded-full mb-4">
               Success Stories
             </span>
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">What Our <span className="text-red-600">Sellers Say</span></h2>
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">What Our <span className="text-primary">Sellers Say</span></h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
               Don't just take our word for it - hear from our community of successful sellers
             </p>

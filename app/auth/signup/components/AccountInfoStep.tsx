@@ -1,6 +1,6 @@
-import { PasswordInput } from '@/components/auth/PasswordInput';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { PasswordInput } from "@/components/auth/PasswordInput";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface AccountInfoStepProps {
   formData: {
@@ -22,7 +22,7 @@ export function AccountInfoStep({
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Account Information</h3>
-      
+
       <div className="space-y-2">
         <Label htmlFor="fullName">Full Name</Label>
         <Input
@@ -49,7 +49,7 @@ export function AccountInfoStep({
           required
         />
       </div>
-      
+
       <div className="space-y-2">
         <Label htmlFor="password">Create a Password</Label>
         <PasswordInput

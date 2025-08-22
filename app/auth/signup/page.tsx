@@ -25,7 +25,7 @@ import {
 function SignUpContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [isPending] = useTransition(); 
+  const [isPending] = useTransition();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [email, setEmail] = useState("");
@@ -109,7 +109,6 @@ function SignUpContent() {
         toast("Password must be at least 8 characters");
         return;
       }
-
     }
 
     if (step === 2) {
@@ -257,17 +256,17 @@ function SignUpContent() {
             {currentStep.component}
 
             <div className="flex justify-between items-center">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={goBack}
-                  className="text-muted-foreground"
-                  disabled={step === 1}
-                >
-                  <ArrowLeft className="mr-1 h-4 w-4" />
-                  Back
-                </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={goBack}
+                className="text-muted-foreground"
+                disabled={step === 1}
+              >
+                <ArrowLeft className="mr-1 h-4 w-4" />
+                Back
+              </Button>
 
               <Button
                 type="submit"

@@ -1,13 +1,25 @@
-'use client';
+"use client";
 
-import { City, State } from '@/actions/location';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { City, State } from "@/actions/location";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface AddressInfoStepProps {
   formData: {
@@ -31,24 +43,24 @@ export function AddressInfoStep({
   isSubmitting,
   isPending,
 }: AddressInfoStepProps) {
-  const [countryId, setCountryId] = useState('1');
+  const [countryId, setCountryId] = useState("1");
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [isLoadingStates, setIsLoadingStates] = useState(true);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
   const [isAddingCity, setIsAddingCity] = useState(false);
-  const [newCity, setNewCity] = useState('');
+  const [newCity, setNewCity] = useState("");
   const [openCityDialog, setOpenCityDialog] = useState(false);
 
   // Fetch states on component mount
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const { getStates } = await import('@/actions/location');
+        const { getStates } = await import("@/actions/location");
         const statesData = await getStates();
         setStates(statesData);
       } catch (error) {
-        console.error('Error fetching states:', error);
+        console.error("Error fetching states:", error);
       } finally {
         setIsLoadingStates(false);
       }
@@ -67,11 +79,11 @@ export function AddressInfoStep({
 
       setIsLoadingCities(true);
       try {
-        const { getCitiesByState } = await import('@/actions/location');
+        const { getCitiesByState } = await import("@/actions/location");
         const citiesData = await getCitiesByState(formData.stateId);
         setCities(citiesData);
       } catch (error) {
-        console.error('Error fetching cities:', error);
+        console.error("Error fetching cities:", error);
       } finally {
         setIsLoadingCities(false);
       }
@@ -81,46 +93,50 @@ export function AddressInfoStep({
   }, [formData.stateId]);
 
   const handleStateChange = (value: string) => {
-    const selectedState = states.find(state => state.id === value);
+    const selectedState = states.find((state) => state.id === value);
     if (selectedState) {
-      handleSelectChange('state', selectedState.name);
-      handleSelectChange('stateId', selectedState.id);
+      handleSelectChange("state", selectedState.name);
+      handleSelectChange("stateId", selectedState.id);
       // Reset city when state changes
-      handleSelectChange('city', '');
-      handleSelectChange('cityId', '');
+      handleSelectChange("city", "");
+      handleSelectChange("cityId", "");
 
       setCountryId(selectedState.country_id);
     }
   };
 
   const handleCityChange = (value: string) => {
-    const selectedCity = cities.find(city => city.id === value);
+    const selectedCity = cities.find((city) => city.id === value);
     if (selectedCity) {
-      handleSelectChange('city', selectedCity.name);
-      handleSelectChange('cityId', selectedCity.id);
+      handleSelectChange("city", selectedCity.name);
+      handleSelectChange("cityId", selectedCity.id);
     }
   };
 
   const handleAddNewCity = async () => {
     if (!newCity.trim() || !formData.stateId) return;
-    
+
     setIsAddingCity(true);
     try {
-      const { addNewCity } = await import('@/actions/location');
-      const addedCity = await addNewCity(newCity.trim(), formData.stateId, countryId);
-      
+      const { addNewCity } = await import("@/actions/location");
+      const addedCity = await addNewCity(
+        newCity.trim(),
+        formData.stateId,
+        countryId
+      );
+
       // Update cities list
-      setCities(prev => [...prev, addedCity]);
-      
+      setCities((prev) => [...prev, addedCity]);
+
       // Select the newly added city
-      handleSelectChange('city', addedCity.name);
-      handleSelectChange('cityId', addedCity.id);
-      
+      handleSelectChange("city", addedCity.name);
+      handleSelectChange("cityId", addedCity.id);
+
       // Reset form and close dialog
-      setNewCity('');
+      setNewCity("");
       setOpenCityDialog(false);
     } catch (error) {
-      console.error('Error adding new city:', error);
+      console.error("Error adding new city:", error);
     } finally {
       setIsAddingCity(false);
     }
@@ -147,11 +163,11 @@ export function AddressInfoStep({
         <div className="space-y-2">
           <Label htmlFor="state">State</Label>
           <Select
-            value={formData.stateId || ''}
+            value={formData.stateId || ""}
             onValueChange={handleStateChange}
             disabled={isPending || isSubmitting || isLoadingStates}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select state" />
             </SelectTrigger>
             <SelectContent>
@@ -160,7 +176,7 @@ export function AddressInfoStep({
                   <Loader2 className="h-4 w-4 animate-spin" />
                 </div>
               ) : (
-                states.map(state => (
+                states.map((state) => (
                   <SelectItem key={state.id} value={state.id}>
                     {state.name}
                   </SelectItem>
@@ -230,11 +246,13 @@ export function AddressInfoStep({
             </Dialog>
           </div>
           <Select
-            value={formData.cityId || ''}
+            value={formData.cityId || ""}
             onValueChange={handleCityChange}
-            disabled={isPending || isSubmitting || isLoadingCities || !formData.stateId}
+            disabled={
+              isPending || isSubmitting || isLoadingCities || !formData.stateId
+            }
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select city" />
             </SelectTrigger>
             <SelectContent>
@@ -243,7 +261,7 @@ export function AddressInfoStep({
                   <Loader2 className="h-4 w-4 animate-spin" />
                 </div>
               ) : cities.length > 0 ? (
-                cities.map(city => (
+                cities.map((city) => (
                   <SelectItem key={city.id} value={city.id}>
                     {city.name}
                   </SelectItem>
