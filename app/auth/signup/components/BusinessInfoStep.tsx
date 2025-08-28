@@ -1,3 +1,4 @@
+import { BusinessType } from "@/actions/business-types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -7,12 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface BusinessType {
-  id: string;
-  name: string;
-  description: string | null;
-}
 
 interface BusinessInfoStepProps {
   formData: {

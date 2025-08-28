@@ -42,7 +42,6 @@ export default function EnquiriesPage() {
   const {
     data: messages = [],
     isLoading: isLoadingMessages,
-    error: messagesError,
   } = useQuery({
     queryKey: ['messages', selectedConversationId],
     queryFn: () => selectedConversationId ? getMessages(selectedConversationId).then(res => res.data || []) : Promise.resolve([]),

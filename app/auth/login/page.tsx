@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState, useTransition } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
 function LoginContent() {
@@ -19,20 +19,28 @@ function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  const emailRegex = useMemo(() => /^(?:[a-zA-Z0-9_'^&/+-])+(?:\.(?:[a-zA-Z0-9_'^&/+-])+)*@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/, []);
+  const isPasswordValid = useMemo(() => password.length >= 8, [password]);
+
   useEffect(() => {
     const emailParam = searchParams.get('email');
     if (emailParam) {
-      setEmail(decodeURIComponent(emailParam));
+      const normalized = decodeURIComponent(emailParam).trim().toLowerCase();
+      if (!emailRegex.test(normalized)) {
+        router.push('/auth');
+        return;
+      }
+      setEmail(normalized);
     } else {
       // If no email is provided, redirect to the auth page
       router.push('/auth');
     }
   }, [searchParams, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password) {
-      toast('Password is required');
+    if (!isPasswordValid) {
+      toast.error('Password must be at least 8 characters');
       return;
     }
     
@@ -49,23 +57,19 @@ function LoginContent() {
         // Redirect to seller dashboard on successful login
         router.push('/dashboard');
         
-        toast('Login successful', {
-          description: 'Welcome back to your seller dashboard!',
-        });
+        toast.success('Login successful');
       } catch (error) {
         console.error('Login error:', error);
-        toast('Login failed', {
-          description: error instanceof Error ? error.message : 'An error occurred. Please try again.',
-        });
+        toast.error('Login failed');
       } finally {
         setIsSubmitting(false);
       }
     });
-  };
+  }, [email, isPasswordValid, login, password, router, startTransition]);
   
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     router.push('/auth');
-  };
+  }, [router]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -95,6 +99,8 @@ function LoginContent() {
                   value={password}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   disabled={isPending || isSubmitting}
+                  autoComplete="current-password"
+                  enterKeyHint="done"
                   required
                 />
               </div>
@@ -103,8 +109,11 @@ function LoginContent() {
             
             <Button 
               type="submit"
-              disabled={isPending || isSubmitting}
+              disabled={isPending || isSubmitting || !isPasswordValid}
               className="w-full"
+              onMouseEnter={() => {
+                try { router.prefetch('/dashboard'); } catch {}
+              }}
             >
               {(isPending || isSubmitting) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

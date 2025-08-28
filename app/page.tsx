@@ -276,14 +276,14 @@ export default function SellerHomePage() {
             {[
               {
                 quote: "Simmerce has transformed our business. We've seen a 3x increase in B2B orders since joining the platform.",
-                author: "Rajesh Sharma",
-                role: "Owner, Sharma Textiles",
+                author: "Sanket Khote",
+                role: "Owner, Ioncore",
                 rating: 5
               },
               {
                 quote: "The platform is incredibly easy to use, and the support team is always there to help. Highly recommended!",
-                author: "Priya Patel",
-                role: "CEO, Handicraft Exports",
+                author: "Bhimrao Thorat",
+                role: "CEO, Curify Spices",
                 rating: 5
               },
               {

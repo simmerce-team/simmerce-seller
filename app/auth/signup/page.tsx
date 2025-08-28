@@ -14,7 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState, useTransition } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
   AccountInfoStep,
@@ -31,6 +31,11 @@ function SignUpContent() {
   const [email, setEmail] = useState("");
   const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
   const [isLoadingBusinessTypes, setIsLoadingBusinessTypes] = useState(true);
+
+  const emailRegex = useMemo(() => /^(?:[a-zA-Z0-9_'^&/+-])+(?:\.(?:[a-zA-Z0-9_'^&/+-])+)*@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/, []);
+  const phoneRegex = useMemo(() => /^[6-9]\d{9}$/, []); // India-specific mobile format; adjust if needed
+  const pincodeRegex = useMemo(() => /^\d{6}$/, []);
+  const gstRegex = useMemo(() => /^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}Z[A-Z\d]{1}$/i, []);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -67,70 +72,70 @@ function SignUpContent() {
   useEffect(() => {
     const emailParam = searchParams.get("email");
     if (emailParam) {
-      setEmail(decodeURIComponent(emailParam));
+      const normalized = decodeURIComponent(emailParam).trim().toLowerCase();
+      if (!emailRegex.test(normalized)) {
+        router.push("/auth");
+        return;
+      }
+      setEmail(normalized);
     }
   }, [searchParams]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-  };
+  }, []);
 
-  const handleSelectChange = (name: string, value: string) => {
+  const handleSelectChange = useCallback((name: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-  };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const isStep1Valid = useMemo(() => {
+    if (!formData.fullName || formData.fullName.trim().length < 2) return false;
+    if (!phoneRegex.test(formData.phone)) return false;
+    if (!formData.password || formData.password.length < 8) return false;
+    return true;
+  }, [formData.fullName, formData.password, formData.phone, phoneRegex]);
+
+  const isStep2Valid = useMemo(() => {
+    if (!formData.businessName || formData.businessName.trim().length < 2) return false;
+    if (!formData.businessTypeId) return false;
+    if (formData.gstNumber && !gstRegex.test(formData.gstNumber)) return false;
+    return true;
+  }, [formData.businessName, formData.businessTypeId, formData.gstNumber, gstRegex]);
+
+  const isStep3Valid = useMemo(() => {
+    if (!formData.address || !formData.city || !formData.state || !formData.pincode) return false;
+    if (!pincodeRegex.test(formData.pincode)) return false;
+    return true;
+  }, [formData.address, formData.city, formData.state, formData.pincode, pincodeRegex]);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (step === 1) {
-      if (!formData.fullName) {
-        toast("Full name is required");
-        return;
-      }
-
-      if (!formData.phone) {
-        toast("Phone number is required");
-        return;
-      }
-
-      if (!formData.password) {
-        toast("Password is required");
-        return;
-      }
-
-      if (formData.password.length < 8) {
-        toast("Password must be at least 8 characters");
+      if (!isStep1Valid) {
+        toast("Please complete your account info correctly");
         return;
       }
     }
 
     if (step === 2) {
-      if (!formData.businessName) {
-        toast("Business name is required");
-        return;
-      }
-
-      if (!formData.businessTypeId) {
-        toast("Please select a business type");
+      if (!isStep2Valid) {
+        toast("Please complete your business info correctly");
         return;
       }
     }
 
     if (step === 3) {
-      if (
-        !formData.address ||
-        !formData.city ||
-        !formData.state ||
-        !formData.pincode
-      ) {
-        toast("Please fill in all address fields");
+      if (!isStep3Valid) {
+        toast("Please complete your address info correctly");
         return;
       }
 
@@ -173,15 +178,15 @@ function SignUpContent() {
     }
 
     setStep((prev) => prev + 1);
-  };
+  }, [email, isStep1Valid, isStep2Valid, isStep3Valid, formData, router]);
 
-  const goBack = () => {
+  const goBack = useCallback(() => {
     if (step === 1) {
       router.push("/auth");
     } else {
       setStep((prev) => prev - 1);
     }
-  };
+  }, [router, step]);
 
   const steps = [
     {
@@ -271,7 +276,18 @@ function SignUpContent() {
               <Button
                 type="submit"
                 className="ml-auto"
-                disabled={isPending || isSubmitting}
+                disabled={
+                  isPending ||
+                  isSubmitting ||
+                  (step === 1 && !isStep1Valid) ||
+                  (step === 2 && !isStep2Valid) ||
+                  (step === 3 && !isStep3Valid)
+                }
+                onMouseEnter={() => {
+                  if (step === 3 && isStep3Valid) {
+                    try { router.prefetch('/dashboard'); } catch {}
+                  }
+                }}
               >
                 {isSubmitting ? (
                   <>

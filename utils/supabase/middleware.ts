@@ -36,10 +36,6 @@ export async function updateSession(request: NextRequest) {
   // Get the user's session
   const { data } = await supabase.auth.getClaims()
   
-  // Debug log
-  console.log('Auth data:', data)
-  console.log('Request path:', request.nextUrl.pathname)
-  
   // Define public paths that don't require authentication
   const publicPaths = [
     '/', // Root path
@@ -58,15 +54,12 @@ export async function updateSession(request: NextRequest) {
   const isPublicPath = publicPaths.some(path => {
     const isMatch = request.nextUrl.pathname === path || 
                    request.nextUrl.pathname.startsWith(`${path}/`)
-    console.log(`Checking path ${path} against ${request.nextUrl.pathname}: ${isMatch}`)
     return isMatch
   })
   
-  console.log('Is public path:', isPublicPath)
   
   // If user is not authenticated and trying to access a protected route
   if (!data && !isPublicPath) {
-    console.log('Redirecting to auth - not authenticated and path is not public')
     // Create a redirect URL to the login page
     const redirectUrl = new URL('/auth', request.url)
     // Store the original URL the user was trying to access

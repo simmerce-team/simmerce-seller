@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export default function AuthPage() {
@@ -21,18 +21,27 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  const validateEmail = useCallback((value: string) => {
+    // Basic but robust email regex; complements HTML5 validation
+    const re = /^(?:[a-zA-Z0-9_'^&/+-])+(?:\.(?:[a-zA-Z0-9_'^&/+-])+)*@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+    return re.test(value);
+  }, []);
+
+  const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email]);
+  const isValid = useMemo(() => (normalizedEmail ? validateEmail(normalizedEmail) : false), [normalizedEmail, validateEmail]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!normalizedEmail || !isValid || isLoading) return;
 
     setIsLoading(true);
     try {
-      const userExists = await checkEmailExists(email);
+      const userExists = await checkEmailExists(normalizedEmail);
 
       if (userExists) {
-        router.push(`/auth/login?email=${encodeURIComponent(email)}`);
+        router.push(`/auth/login?email=${encodeURIComponent(normalizedEmail)}`);
       } else {
-        router.push(`/auth/signup?email=${encodeURIComponent(email)}`);
+        router.push(`/auth/signup?email=${encodeURIComponent(normalizedEmail)}`);
       }
     } catch (error) {
       console.error("Error checking user:", error);
@@ -67,12 +76,33 @@ export default function AuthPage() {
                 disabled={isLoading}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onBlur={(e) => setEmail(e.target.value.trim().toLowerCase())}
                 required
+                aria-invalid={email.length > 0 && !isValid}
+                aria-describedby="email-help"
                 className="w-full"
               />
+              <p id="email-help" className="text-xs text-muted-foreground">
+                Use your business email (e.g., name@company.com)
+              </p>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading || !isValid}
+              onMouseEnter={() => {
+                // Prefetch the most likely route for snappy nav
+                if (isValid) {
+                  const next = `/auth/login?email=${encodeURIComponent(normalizedEmail)}`;
+                  const alt = `/auth/signup?email=${encodeURIComponent(normalizedEmail)}`;
+                  try {
+                    router.prefetch(next);
+                    router.prefetch(alt);
+                  } catch {}
+                }
+              }}
+            >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Continue
             </Button>

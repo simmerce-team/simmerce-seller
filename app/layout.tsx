@@ -18,16 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
-      <body className={`${inter.className} relative`}>
-        {/* Skip to main content link for keyboard users */}
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-white focus:px-4 focus:py-2 focus:rounded focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-          aria-label="Skip to main content"
-        >
-          Skip to content
-        </a>
-        
+      <body className={`${inter.className} relative`}>        
         <AuthProvider>
           <QueryProvider>
             {children}

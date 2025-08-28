@@ -5,9 +5,6 @@ import { createClient } from "@/utils/supabase/server";
 export interface BusinessType {
   id: string;
   name: string;
-  description: string | null;
-  created_at: string;
-  updated_at: string;
 }
 
 export async function getBusinessTypes(): Promise<BusinessType[]> {
@@ -15,7 +12,7 @@ export async function getBusinessTypes(): Promise<BusinessType[]> {
 
   const { data, error } = await supabase
     .from("business_types")
-    .select("*")
+    .select("id, name")
     .order("name", { ascending: true });
 
   if (error) {
@@ -23,5 +20,5 @@ export async function getBusinessTypes(): Promise<BusinessType[]> {
     throw error;
   }
 
-  return data as BusinessType[];
+  return data;
 }

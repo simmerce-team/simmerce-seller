@@ -12,15 +12,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCategories } from "@/hooks/use-categories";
+import { UNITS } from "@/utils/constant";
 
 interface ProductFormData {
   name: string;
@@ -41,10 +42,10 @@ export default function AddProductPage() {
   const [formData, setFormData] = useState<ProductFormData>({
     name: "",
     description: "",
-    price: "",
+    price: "0.00",
     unit: "piece",
     moq: "1",
-    stock_quantity: "",
+    stock_quantity: "1",
     category_id: "",
     sku: "",
     is_active: true,
@@ -118,25 +119,24 @@ export default function AddProductPage() {
         stock_quantity: parseInt(formData.stock_quantity, 10) || 0,
         category_id: formData.category_id,
         sku: formData.sku.trim() || undefined,
-        is_active: formData.is_active
+        is_active: formData.is_active,
       });
 
       if (!result.success) {
-        throw new Error(result.error || 'Failed to create product');
+        throw new Error(result.error || "Failed to create product");
       }
 
       toast.success("Product created successfully!");
-      
+
       // Redirect to products list after a short delay to show success message
       setTimeout(() => {
         router.push("/products");
       }, 1000);
-      
     } catch (error) {
       console.error("Error creating product:", error);
       toast.error(
-        error instanceof Error 
-          ? error.message 
+        error instanceof Error
+          ? error.message
           : "Failed to create product. Please try again."
       );
     } finally {
@@ -212,18 +212,17 @@ export default function AddProductPage() {
                 value={formData.unit}
                 onValueChange={(value) => handleInputChange("unit", value)}
               >
-                <SelectTrigger className={errors.unit ? "border-destructive w-full" : "w-full"}>
+                <SelectTrigger
+                  className={
+                    errors.unit ? "border-destructive w-full" : "w-full"
+                  }
+                >
                   <SelectValue placeholder="Select unit" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="piece">Piece</SelectItem>
-                  <SelectItem value="kg">Kilogram</SelectItem>
-                  <SelectItem value="gram">Gram</SelectItem>
-                  <SelectItem value="liter">Liter</SelectItem>
-                  <SelectItem value="meter">Meter</SelectItem>
-                  <SelectItem value="box">Box</SelectItem>
-                  <SelectItem value="pack">Pack</SelectItem>
-                  <SelectItem value="set">Set</SelectItem>
+                  {UNITS.map((unit) => (
+                    <SelectItem value={unit.value}>{unit.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {errors.unit && (
@@ -277,11 +276,15 @@ export default function AddProductPage() {
               <Label htmlFor="category">Category *</Label>
               <Select
                 value={formData.category_id}
-                onValueChange={(value) => handleInputChange("category_id", value)}
+                onValueChange={(value) =>
+                  handleInputChange("category_id", value)
+                }
                 disabled={categoriesLoading}
               >
                 <SelectTrigger
-                  className={errors.category_id ? "border-destructive w-full" : "w-full"}
+                  className={
+                    errors.category_id ? "border-destructive w-full" : "w-full"
+                  }
                 >
                   <SelectValue
                     placeholder={
@@ -343,9 +346,7 @@ export default function AddProductPage() {
                   Creating...
                 </>
               ) : (
-                <>
-                  Create Product
-                </>
+                <>Create Product</>
               )}
             </Button>
           </div>
