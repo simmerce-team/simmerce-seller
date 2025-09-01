@@ -4,14 +4,11 @@ import { deleteProductFile, uploadProductFile } from "@/actions/file-upload";
 import { ProductDetail, ProductFile } from "@/actions/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Plus, Trash2, X, Youtube } from "lucide-react";
+import { ALLOWED_IMAGE_TYPES, Images, MAX_IMAGES, MAX_PDF_SIZE } from "@/utils/constant";
+import { FileText, Loader2, Plus, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-const MAX_IMAGES = 3;
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 type FileWithPreview = File & { preview: string; id?: string };
 
@@ -126,7 +123,7 @@ export default function EditProductMedia({
       if (pdfInput?.files?.length) {
         try {
           const file = pdfInput.files[0];
-          if (file.size > MAX_FILE_SIZE) {
+          if (file.size > MAX_PDF_SIZE) {
             errors.push('PDF file is too large. Maximum size is 5MB.');
           } else {
             const result = await uploadProductFile(product.id, file, "pdf");
@@ -190,145 +187,142 @@ export default function EditProductMedia({
 
   return (
     <div className="space-y-6">
-      {/* Images Section */}
+      {/* Image Upload Section */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h4 className="font-medium">Product Images</h4>
-          <span className="text-sm text-muted-foreground">
-            {existingImages.length + files.length} of {MAX_IMAGES} images
-          </span>
-        </div>
-        
-        <div className="flex flex-wrap gap-4">
+        <h4 className="font-medium">Product Images</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {/* Existing Images */}
           {existingImages.map((file) => (
             <div key={file.id} className="relative group">
-              <div className="relative w-24 h-24 rounded-md overflow-hidden border">
+              <div className="aspect-square overflow-hidden rounded-md border">
                 <Image
                   src={file.url}
-                  alt={file.alt_text || 'Product image'}
-                  fill
-                  className="object-cover"
-                  sizes="96px"
+                  alt="Product preview"
+                  width={200}
+                  height={200}
+                  className="w-full h-full object-cover"
                 />
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={() => removeExistingImage(file)}
-                className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                 disabled={isLoading}
               >
-                <X className="h-4 w-4" />
-              </button>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
             </div>
           ))}
 
-          {/* New Files */}
+          {/* New Image Uploads */}
           {files.map((file, index) => (
             <div key={index} className="relative group">
-              <div className="relative w-24 h-24 rounded-md overflow-hidden border">
+              <div className="aspect-square overflow-hidden rounded-md border">
                 <Image
                   src={file.preview}
-                  alt={`New image ${index + 1}`}
-                  fill
-                  className="object-cover"
-                  sizes="96px"
+                  alt="New upload preview"
+                  width={200}
+                  height={200}
+                  className="w-full h-full object-cover"
                 />
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={() => removeFile(index)}
-                className="absolute -top-2 -right-2 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                 disabled={isLoading}
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
           ))}
 
           {/* Add Image Button */}
           {existingImages.length + files.length < MAX_IMAGES && (
-            <label className="flex items-center justify-center w-24 h-24 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted/20 transition-colors">
+            <label className="flex aspect-square items-center justify-center rounded-md border border-dashed cursor-pointer hover:bg-muted/20 transition-colors">
               <input
                 type="file"
-                accept={ACCEPTED_IMAGE_TYPES.join(',')}
-                multiple
+                accept={ALLOWED_IMAGE_TYPES.join(',')}
                 className="hidden"
                 onChange={handleFileChange}
-                disabled={isLoading || existingImages.length + files.length >= MAX_IMAGES}
+                multiple
+                disabled={isLoading || isUploading}
               />
-              <Plus className="h-6 w-6 text-muted-foreground" />
+              <div className="flex flex-col items-center gap-2 p-4 text-center">
+                <Plus className="h-6 w-6 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  Add Image
+                </span>
+              </div>
             </label>
           )}
         </div>
+        <p className="text-xs text-muted-foreground">
+          {existingImages.length + files.length} of {MAX_IMAGES} images
+        </p>
       </div>
 
       {/* PDF Section */}
       <div className="space-y-2">
-        <h4 className="font-medium">Product Catalog (PDF)</h4>
+        <h4 className="font-medium">PDF Catalog</h4>
         {existingPdf ? (
-          <div className="flex items-center gap-2">
-            <a
-              href={existingPdf.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              View PDF Catalog
-            </a>
-            <button
-              type="button"
+          <div className="flex items-center justify-between p-3 border rounded-md">
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-red-500" />
+              <a 
+                href={existingPdf.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-sm text-blue-600 hover:underline"
+              >
+                View PDF
+              </a>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={removePdf}
-              className="text-destructive hover:text-destructive/80"
-              disabled={isLoading || isPdfUploading}
+              disabled={isLoading}
             >
-              <Trash2 className="h-4 w-4" />
-            </button>
+              <Trash2 className="w-4 h-4 text-destructive" />
+            </Button>
           </div>
         ) : (
-          <label className="inline-flex items-center gap-2 p-3 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted/20 transition-colors">
-            <input
-              type="file"
-              accept="application/pdf"
-              className="hidden"
-              onChange={async (e) => {
-                if (!e.target.files?.length) return;
-                const file = e.target.files[0];
-                
-                if (file.size > MAX_FILE_SIZE) {
-                  toast.error('PDF file is too large. Maximum size is 5MB.');
-                  return;
-                }
-
+          <Input
+            type="file"
+            accept=".pdf"
+            onChange={async (e) => {
+              if (e.target.files?.[0]) {
                 try {
                   setIsPdfUploading(true);
-                  const result = await uploadProductFile(product.id, file, "pdf");
+                  const file = e.target.files[0];
+                  const result = await uploadProductFile(product.id, file, 'pdf');
+                  if (result.error) throw new Error(result.error);
                   
-                  if (result.data && !Array.isArray(result.data)) {
+                  if (result.data) {
+                    const uploadedFile = Array.isArray(result.data) ? result.data[0] : result.data;
                     setExistingPdf({
-                      ...result.data,
+                      ...uploadedFile,
+                      file_type: 'pdf' as const,
+                      is_primary: false,
                       alt_text: null,
                       display_order: 0,
-                      is_primary: false,
                     });
-                  } else if (result.error) {
-                    throw new Error(result.error);
                   }
                 } catch (error) {
-                  console.error("Error uploading PDF:", error);
-                  toast.error("Failed to upload PDF");
+                  console.error('PDF upload error:', error);
+                  toast.error('Failed to upload PDF');
                 } finally {
                   setIsPdfUploading(false);
-                  // Reset the input
-                  e.target.value = '';
                 }
-              }}
-              disabled={isLoading || isPdfUploading}
-            />
-            <Plus className="h-4 w-4" />
-            <span>Upload PDF Catalog</span>
-            {isPdfUploading && <Loader2 className="h-4 w-4 animate-spin" />}
-          </label>
+              }
+            }}
+            disabled={isLoading || isPdfUploading}
+          />
         )}
       </div>
 
@@ -344,7 +338,7 @@ export default function EditProductMedia({
             className="flex-1"
             disabled={isLoading}
           />
-          <Youtube className="h-5 w-5 text-muted-foreground" />
+          <Image src={Images.youtube} alt="YouTube thumbnail" width={32} height={32} />
         </div>
       </div>
 

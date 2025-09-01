@@ -1,8 +1,9 @@
 export const Images = {
   logo: "/simmerce.svg",
   placeholder: "/placeholder.svg",
-  user: "/placeholder-user.jpg",
+  user: "/user.svg",
   pdf: "/pdf.svg",
+  youtube: "/youtube.svg",
 };
 
 export const UNITS = [

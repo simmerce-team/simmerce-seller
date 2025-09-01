@@ -67,7 +67,6 @@ export default function ProductMedia({ product: initialProduct }: { product: Pro
       };
 
       setCurrentProduct(updatedProduct);
-      toast.success("Media updated successfully");
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating media:", error);
