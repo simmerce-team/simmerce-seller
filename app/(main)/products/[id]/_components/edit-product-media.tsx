@@ -10,7 +10,11 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-type FileWithPreview = File & { preview: string; id?: string };
+type FileWithPreview = {
+  file: File;
+  preview: string;
+  id: string;
+};
 
 export default function EditProductMedia({
   product,
@@ -44,8 +48,9 @@ export default function EditProductMedia({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files).map((file) => ({
-        ...file,
+        file, // Store the actual File object
         preview: URL.createObjectURL(file),
+        id: `new-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       }));
       setFiles((prev) => [...prev, ...newFiles]);
     }
@@ -99,7 +104,7 @@ export default function EditProductMedia({
       // Upload new images
       for (const file of files) {
         try {
-          const result = await uploadProductFile(product.id, file, "image");
+          const result = await uploadProductFile(product.id, file.file, "image");
           if (result.data && !Array.isArray(result.data)) {
             const completeFile: ProductFile = {
               ...result.data,
@@ -109,11 +114,11 @@ export default function EditProductMedia({
             };
             newFiles.push(completeFile);
           } else if (result.error) {
-            errors.push(`Failed to upload ${file.name}: ${result.error}`);
+            errors.push(`Failed to upload ${file.file.name}: ${result.error}`);
           }
         } catch (error) {
-          console.error(`Error uploading file ${file.name}:`, error);
-          errors.push(`Failed to upload ${file.name}`);
+          console.error(`Error uploading file ${file.file.name}:`, error);
+          errors.push(`Failed to upload ${file.file.name}`);
         }
       }
 
@@ -193,7 +198,7 @@ export default function EditProductMedia({
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {/* Existing Images */}
           {existingImages.map((file) => (
-            <div key={file.id} className="relative group">
+            <div key={file.id} className="relative">
               <div className="aspect-square overflow-hidden rounded-md border">
                 <Image
                   src={file.url}
@@ -207,7 +212,7 @@ export default function EditProductMedia({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-1 right-1 h-8 w-8 rounded-full bg-background/80 hover:bg-destructive/10"
                 onClick={() => removeExistingImage(file)}
                 disabled={isLoading}
               >
@@ -218,7 +223,7 @@ export default function EditProductMedia({
 
           {/* New Image Uploads */}
           {files.map((file, index) => (
-            <div key={index} className="relative group">
+            <div key={file.id} className="relative">
               <div className="aspect-square overflow-hidden rounded-md border">
                 <Image
                   src={file.preview}
@@ -232,11 +237,11 @@ export default function EditProductMedia({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-1 right-1 h-8 w-8 rounded-full bg-background/80 hover:bg-destructive/10"
                 onClick={() => removeFile(index)}
                 disabled={isLoading}
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4 text-destructive" />
               </Button>
             </div>
           ))}
